@@ -38,8 +38,30 @@ public class App {
 
     public static void goFoward() {
         int removeIndex = unVisitedSet.indexOf(new Pair(curX, curY));
+        if (removeIndex != -1){
         unVisitedSet.remove(removeIndex);
         visitedSet.add(new Pair(curX, curY));
+        }
+        // 방향에 따른 좌표 변화
+        switch (curDir) {
+            case 'E':
+                curX++;
+                break;
+            case 'W':
+                curX--;
+                break;
+            case 'S':
+                curY--;
+                break;
+            case 'N':
+                curY++;
+                break;
+        }
+        // unVisitedSet.remove(new Pair(curX, curY));
+        // visitedSet.add(new Pair(curX, curY));
+        // 여기에 기존 forward 추가.
+    }
+    public static void goForward() {
         // 방향에 따른 좌표 변화
         switch (curDir) {
             case 'E':
@@ -108,6 +130,100 @@ public class App {
     }
 
     public static void returnHome() {
+        while (curX == 0 & curY == 0){
+            while (curDir != 'S'){
+                turnLeft();
+            }
+
+            while (curY > 0 & !distanceCheck()){
+                    goForward();
+                } //일단 밑으로 갈수있는데까지 내려감
+
+            turnLeft(); //이제 다시 중 W보는중
+            if (curY !=0){ //0이 아니면 밑에 block 이 있단거
+
+                if (distanceCheck() | curX == 0){ //왼쪽으로 못감 이유 2가지
+                    turnLeft(); 
+                    turnLeft();
+            
+                    if (distanceCheck()) { //만약 right 에 block 이 있다? -> 왼쪽은 boundary 오른쪽 block 밑 block
+                    	turnLeft();
+                    	goForward();
+                    	turnRight();
+                    	goForward();
+                    	goForward();
+                    	turnRight();
+                    }
+                    else if (curX == 5){ //왼쪽으로 못가는데 오른쪽은 또 boundary 라 못감. 즉 back 해야함
+                    	turnLeft();
+                    	goForward();
+                    	turnLeft();
+                    	goForward();
+                    	goForward();
+                    	turnLeft();
+                    }
+                    else{ // 오른쪽 뚫려있음 가고 다시 S보게 만듬
+                    	goForward();
+                    	if (curX != 4 & !distanceCheck())  {
+                    		goForward(); //4가 아니면 두번갈 수 있음 block 나란히 두개 방지
+                    		turnRight();
+                    	}
+                    }
+                }
+        
+                else { //그냥 왼쪽이 뚫려있음 => 왼쪽으로감 + 다시 S보는중
+                	goForward();
+                	turnLeft();
+                }
+           }
+           else { //이건 curY가 0일때만 실행 0이 아니면 위에 while문 다시 실행해서 여기 도착
+                  //여기 실행된다는 것은 맨 밑줄에 있다는 것. 지금 W보고있음.
+                while(curX>0 & !distanceCheck()){
+                    goForward();
+                } //왼쪽으로 갈때까지 감
+
+                if (curX == 0) return;
+                    //complete return
+
+                 else{ //block 에 막힌거
+                    turnRight(); 
+                    if (distanceCheck()){ //왼쪽 위 막혀있음 돌아서 나옴
+                        turnRight();
+                        goForward();
+                        turnLeft();
+                        goForward();
+                        goForward();
+                        turnLeft();
+                        goForward();
+                        goForward();
+                        turnLeft();
+                        continue;
+                    }
+                    goForward();
+                    turnLeft();
+                        if (distanceCheck()){ //2개 쌓여있음
+                            turnRight();
+                            goForward();
+                            turnLeft();
+                            goForward();
+                            goForward();
+                        }
+                        else{
+                            goForward(); 
+                            if (distanceCheck()){ //한번 갔는데 block 이 또있음
+                                turnRight();
+                                goForward();
+                                turnLeft();
+                                goForward();
+                                goForward();
+                            }
+                            else{
+                            	goForward();
+                            }
+                        }
+                    }
+            }
+            }
         // 끝났을 때 원점으로 돌아오는 함수
     }
 
@@ -274,6 +390,7 @@ public class App {
         // 모든 칸을 다 가봄
         returnHome();
         System.out.printf("%d", unVisitedSet.size());
+        System.out.printf("%d , %d",curX,curY);
 
     }
 }
