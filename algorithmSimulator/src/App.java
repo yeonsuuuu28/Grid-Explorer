@@ -29,6 +29,8 @@ public class App {
 
     static int curX = 0;
     static int curY = 0;
+    static int forwardCnt = 0;
+    static int turnCnt = 0;
     static char curDir = 'E';
     static ArrayList<Pair> unVisitedSet = new ArrayList<Pair>();
     static ArrayList<Pair> visitedSet = new ArrayList<Pair>();
@@ -54,13 +56,13 @@ public class App {
             red2y = (int) (Math.random()*4);
         }
         System.out.println("1");
-        while ((red1x == box1x && red1y == box1y) || (red2x == box1x && red2y == box1y)){
+        while ((red1x == box1x && red1y == box1y) || (red2x == box1x && red2y == box1y) || (box1x == 0 && box1y == 0)){
             box1x = (int) (Math.random()*6);
             box1y = (int) (Math.random()*4); 
         }
         System.out.println("2");
 
-        while ((red1x == box2x && red1y == box2y) || (red2x == box2x && red2y == box2y) || (box1x == box2x && box1y == box2y)){
+        while ((red1x == box2x && red1y == box2y) || (red2x == box2x && red2y == box2y) || (box1x == box2x && box1y == box2y) || (box2x == 0 && box2y == 0)){
             box2x = (int) (Math.random()*6);
             box2y = (int) (Math.random()*4); 
         }
@@ -80,6 +82,7 @@ public class App {
         return pairs;
     }
     public static void goFoward() {
+        forwardCnt+=1;
         int removeIndex = unVisitedSet.indexOf(new Pair(curX, curY));
         if (removeIndex != -1) {
             unVisitedSet.remove(removeIndex);
@@ -106,28 +109,8 @@ public class App {
         // 여기에 기존 forward 추가.
     }
 
-    public static void goForward() {
-        // 방향에 따른 좌표 변화
-        switch (curDir) {
-            case 'E':
-                curX++;
-                break;
-            case 'W':
-                curX--;
-                break;
-            case 'S':
-                curY--;
-                break;
-            case 'N':
-                curY++;
-                break;
-        }
-        // unVisitedSet.remove(new Pair(curX, curY));
-        // visitedSet.add(new Pair(curX, curY));
-        // 여기에 기존 forward 추가.
-    }
-
     public static void turnRight() {
+        turnCnt+=1;
         switch (curDir) {
             case 'E':
                 curDir = 'S';
@@ -146,6 +129,7 @@ public class App {
     }
 
     public static void turnLeft() {
+        turnCnt+=1;
         switch (curDir) {
             case 'E':
                 curDir = 'N';
@@ -174,12 +158,34 @@ public class App {
     }
 
     public static void returnHome() {
+        initializePairs();
+        ArrayList<Pair> newVisited = new ArrayList<Pair>();
+        visitedSet= newVisited;
+
+        int restrictCnt = 0;
         System.out.println("*********Return Home Start!!!*********");
         while(curX!=0 || curY!=0){
+            if(restrictCnt >= 30){
+                System.out.printf("BREAK!!!!!!!!!!!!!!!!!!!\n");
+                System.out.printf("Boxes are at (%d, %d), (%d, %d)\n",
+        initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
+        );
+        System.out.printf("Reds are at (%d, %d), (%d, %d)\n",
+        initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
+        );
+        System.exit(1);
+            }
             System.out.printf("currentPos is %d, %d, currentDir is %c\n", curX, curY, curDir);
-            looseCheck();
+            // looseCheck();
+            if(!strictCheck()){
+                looseCheck();
+            }
+            restrictCnt+=1;
         }
-        System.out.printf("%d , %d", curX, curY);
+        System.out.printf("%d , %d\n", curX, curY);
+        System.out.printf("total (move,turn) is (%d, %d)\n", forwardCnt, turnCnt);
+        double totalTime = forwardCnt*(2.5) + turnCnt*(3.5);
+        System.out.printf("total time is %f", totalTime);
         System.exit(1);
     }
 
@@ -313,7 +319,6 @@ public class App {
         else{
             // 오른쪽
             turnRight();
-            turnRight();
             nextPos = getNextPos();
             if (isAvailableLoose(nextPos)) {
                 goFoward();
@@ -321,13 +326,14 @@ public class App {
             }
             // 왼쪽
             turnLeft();
+            turnLeft();
             nextPos = getNextPos();
             if (isAvailableLoose(nextPos)) {
                 goFoward();
                 return true;
             }
             // 뒤, 뒤까지 못 갈 수는 없다.
-            turnRight();
+            turnLeft();
             goFoward();
         }
         return true;
@@ -335,21 +341,21 @@ public class App {
 
     public static void main(String[] args) throws Exception {
         initializePairs();
-        // initialPairs = pickRandoms();
-        // System.out.printf("Boxes are at (%d, %d), (%d, %d)",
-        // initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
-        // );
-        // System.out.printf("Reds are at (%d, %d), (%d, %d)",
-        // initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
-        // );
-        // boxes.add(initialPairs.get(0));
-        // boxes.add(initialPairs.get(1));
-        // redCells.add(initialPairs.get(2));
-        // redCells.add(initialPairs.get(3));
-        boxes.add(new Pair(1,3));
-        boxes.add(new Pair(2,3));
-        redCells.add(new Pair(2,1));
-        redCells.add(new Pair(1,2));
+        initialPairs = pickRandoms();
+        System.out.printf("Boxes are at (%d, %d), (%d, %d)",
+        initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
+        );
+        System.out.printf("Reds are at (%d, %d), (%d, %d)",
+        initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
+        );
+        boxes.add(initialPairs.get(0));
+        boxes.add(initialPairs.get(1));
+        redCells.add(initialPairs.get(2));
+        redCells.add(initialPairs.get(3));
+        // boxes.add(new Pair(1,3));
+        // boxes.add(new Pair(2,3));
+        // redCells.add(new Pair(2,1));
+        // redCells.add(new Pair(1,2));
         // System.out.printf("%d, %d, %c", curX, curY, curDir);
         // 알고리즘 시작
 
@@ -357,15 +363,15 @@ public class App {
 
         while (!unVisitedSet.isEmpty() && !(redSet.size()>=2 && blockSet.size()>=2)) {
             System.out.printf("currentPos is %d, %d, currentDir is %c\n", curX, curY, curDir);
-            for (int i = 0; i < unVisitedSet.size(); i++) {
-                System.out.printf("(%d,%d)", unVisitedSet.get(i).x, unVisitedSet.get(i).y);
-            }
-            System.out.printf("visitedCells # is %d\n", unVisitedSet.size());
+            // for (int i = 0; i < unVisitedSet.size(); i++) {
+            //     System.out.printf("(%d,%d)", unVisitedSet.get(i).x, unVisitedSet.get(i).y);
+            // }
+            // System.out.printf("visitedCells # is %d\n", unVisitedSet.size());
             System.out.printf("boxes, redCells are %d, %d", blockSet.size(), redSet.size());
             System.out.println("");
 
             try {
-                Thread.sleep(200); // 1초 대기
+                Thread.sleep(50); // 1초 대기
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
