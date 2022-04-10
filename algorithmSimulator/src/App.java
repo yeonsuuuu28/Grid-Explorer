@@ -38,9 +38,6 @@ public class App {
     static ArrayList<Pair> redCells = new ArrayList<Pair>();
 
     public static void goFoward() {
-        if (blockSet.size() == 2 && redSet.size() == 2) {
-            returnHome();
-        }
         int removeIndex = unVisitedSet.indexOf(new Pair(curX, curY));
         if (removeIndex != -1) {
             unVisitedSet.remove(removeIndex);
@@ -135,9 +132,12 @@ public class App {
     }
 
     public static void returnHome() {
-        // while(curX!=0 || curY!=0){
-        //     looseCheck();
-        // }
+        System.out.println("*********Return Home Start!!!*********");
+        while(curX!=0 || curY!=0){
+            System.out.printf("currentPos is %d, %d, currentDir is %c\n", curX, curY, curDir);
+            looseCheck();
+        }
+        System.out.printf("%d , %d", curX, curY);
         System.exit(1);
     }
 
@@ -303,7 +303,7 @@ public class App {
 
         // System.out.println(unVisitedSet.contains(new Pair(0, 0)));
 
-        while (!unVisitedSet.isEmpty()) {
+        while (!unVisitedSet.isEmpty() && !(redSet.size()==2 && blockSet.size()==2)) {
             System.out.printf("currentPos is %d, %d, currentDir is %c\n", curX, curY, curDir);
             for (int i = 0; i < unVisitedSet.size(); i++) {
                 System.out.printf("(%d,%d)", unVisitedSet.get(i).x, unVisitedSet.get(i).y);
@@ -323,6 +323,7 @@ public class App {
             }
         }
         // 모든 칸을 다 가봄
+        
         returnHome();
         System.out.printf("%d", unVisitedSet.size());
         System.out.printf("%d , %d", curX, curY);
