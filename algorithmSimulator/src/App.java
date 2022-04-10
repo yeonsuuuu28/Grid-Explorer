@@ -36,7 +36,49 @@ public class App {
     static ArrayList<Pair> blockSet = new ArrayList<Pair>();
     static ArrayList<Pair> boxes = new ArrayList<Pair>();
     static ArrayList<Pair> redCells = new ArrayList<Pair>();
+    static ArrayList<Pair> initialPairs = new ArrayList<Pair>();
+    public static ArrayList<Pair> pickRandoms() {
+        System.out.println("in!");
+        ArrayList<Pair> pairs = new ArrayList<Pair>();
+        int red1x = (int) (Math.random()*6);
+        int red1y = (int) (Math.random()*4);
+        int red2x = (int) (Math.random()*6);
+        int red2y = (int) (Math.random()*4);
+        int box1x = (int) (Math.random()*6);
+        int box1y = (int) (Math.random()*4);
+        int box2x = (int) (Math.random()*6);
+        int box2y = (int) (Math.random()*4); 
+        System.out.printf("%d %d %d %d\n", red1x, red1y, red2x, red2y);
+        while (red1x == red2x && red2y == red1y){
+            red1y = (int) (Math.random()*6);
+            red2y = (int) (Math.random()*4);
+        }
+        System.out.println("1");
+        while ((red1x == box1x && red1y == box1y) || (red2x == box1x && red2y == box1y)){
+            box1x = (int) (Math.random()*6);
+            box1y = (int) (Math.random()*4); 
+        }
+        System.out.println("2");
 
+        while ((red1x == box2x && red1y == box2y) || (red2x == box2x && red2y == box2y) || (box1x == box2x && box1y == box2y)){
+            box2x = (int) (Math.random()*6);
+            box2y = (int) (Math.random()*4); 
+        }
+        System.out.println("3");
+        
+        System.out.printf("(%d,%d)\n", box1x, box1y);
+
+        Pair box1 = new Pair(box1x,box1y);
+        Pair box2 = new Pair(box2x,box2y);
+        Pair red1 = new Pair(red1x, red1y);
+        Pair red2 = new Pair(red2x, red2y);
+        pairs.add(box1);
+        pairs.add(box2);
+        pairs.add(red1);
+        pairs.add(red2);
+        
+        return pairs;
+    }
     public static void goFoward() {
         int removeIndex = unVisitedSet.indexOf(new Pair(curX, curY));
         if (removeIndex != -1) {
@@ -292,18 +334,28 @@ public class App {
     }
 
     public static void main(String[] args) throws Exception {
-
         initializePairs();
-        boxes.add(new Pair(3, 0));
-        boxes.add(new Pair(1, 2));
-        redCells.add(new Pair(4, 1));
-        redCells.add(new Pair(2, 2));
+        // initialPairs = pickRandoms();
+        // System.out.printf("Boxes are at (%d, %d), (%d, %d)",
+        // initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
+        // );
+        // System.out.printf("Reds are at (%d, %d), (%d, %d)",
+        // initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
+        // );
+        // boxes.add(initialPairs.get(0));
+        // boxes.add(initialPairs.get(1));
+        // redCells.add(initialPairs.get(2));
+        // redCells.add(initialPairs.get(3));
+        boxes.add(new Pair(1,3));
+        boxes.add(new Pair(2,3));
+        redCells.add(new Pair(2,1));
+        redCells.add(new Pair(1,2));
         // System.out.printf("%d, %d, %c", curX, curY, curDir);
         // 알고리즘 시작
 
         // System.out.println(unVisitedSet.contains(new Pair(0, 0)));
 
-        while (!unVisitedSet.isEmpty() && !(redSet.size()==2 && blockSet.size()==2)) {
+        while (!unVisitedSet.isEmpty() && !(redSet.size()>=2 && blockSet.size()>=2)) {
             System.out.printf("currentPos is %d, %d, currentDir is %c\n", curX, curY, curDir);
             for (int i = 0; i < unVisitedSet.size(); i++) {
                 System.out.printf("(%d,%d)", unVisitedSet.get(i).x, unVisitedSet.get(i).y);
