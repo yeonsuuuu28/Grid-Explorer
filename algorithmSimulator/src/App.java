@@ -184,7 +184,7 @@ public class App {
         }
         System.out.printf("%d , %d\n", curX, curY);
         System.out.printf("total (move,turn) is (%d, %d)\n", forwardCnt, turnCnt);
-        double totalTime = forwardCnt*(2.5) + turnCnt*(3.5);
+        double totalTime = forwardCnt*(2) + turnCnt*(3.5);
         System.out.printf("total time is %f", totalTime);
         System.exit(1);
     }
@@ -225,6 +225,49 @@ public class App {
         return nextPos;
     }
 
+    public static Pair getLeftPos() {
+        int leftPosX = curX;
+        int leftPosY = curY;
+        switch (curDir) {
+            case 'E':
+                leftPosY = curY + 1;
+                break;
+            case 'W':
+                leftPosY = curY - 1;
+                break;
+            case 'S':
+                leftPosX = curX + 1;
+                break;
+            case 'N':
+                leftPosX = curX - 1;
+                break;
+        }
+        Pair leftPos = new Pair(leftPosX, leftPosY);
+        return leftPos;
+    }
+    public static Pair getRightPos() {
+        int rightPosX = curX;
+        int rightPosY = curY;
+        switch (curDir) {
+            case 'E':
+                rightPosY = curY - 1;
+                break;
+            case 'W':
+                rightPosY = curY + 1;
+                break;
+            case 'S':
+                rightPosX = curX - 1;
+                break;
+            case 'N':
+                rightPosX = curX + 1;
+                break;
+        }
+        Pair rightPos = new Pair(rightPosX, rightPosY);
+        return rightPos;
+    }
+
+    
+
     public static boolean isAvailableStrict(Pair nextPos) {
         if (nextPos.x > 5 || nextPos.x < 0) {
             return false;
@@ -232,14 +275,14 @@ public class App {
         if (nextPos.y > 3 || nextPos.y < 0) {
             return false;
         }
-        if (visitedSet.contains(new Pair(nextPos.x, nextPos.y))) {// 여기에 하자가 있음
+        if (visitedSet.contains(new Pair(nextPos.x, nextPos.y)) || blockSet.contains(new Pair(nextPos.x, nextPos.y))) {
             return false;
         }
-        if (!distanceCheck()) {
-            // box pos 추가
-            blockSet.add(nextPos);
-            return false;
-        }
+        // if (!distanceCheck()) {
+        //     // box pos 추가
+        //     blockSet.add(nextPos);
+        //     return false;
+        // }
 
         return true;
     }
@@ -251,11 +294,16 @@ public class App {
         if (nextPos.y > 3 || nextPos.y < 0) {
             return false;
         }
-        if (!distanceCheck()) {
-            // box pos 추가
-            blockSet.add(nextPos);
+        if (blockSet.contains(new Pair(nextPos.x, nextPos.y))) {
             return false;
         }
+        // if (!distanceCheck()) {
+        //     // box pos 추가
+        //     if(!(blockSet.contains(nextPos))){
+        //         blockSet.add(nextPos);
+        //     }
+        //     return false;
+        // }
 
         return true;
     }
@@ -264,76 +312,141 @@ public class App {
         // strictCheck에 통과(갈 수 있는 칸이 존재)면 true
         // 정면
         Pair nextPos = getNextPos();
+        Pair leftPos = getLeftPos();
+        Pair rightPos = getRightPos();
+        // System.out.printf("leftPos is (%d, %d)", leftPos.x, leftPos.y);
         if (isAvailableStrict(nextPos)) {
-            goFoward();
-            return true;
+            // System.out.println("strict forward");
+            if (!distanceCheck()) {
+                // box pos 추가
+                if(!blockSet.contains(nextPos)){
+                    blockSet.add(nextPos);
+                }
+            }
+            else{
+                goFoward();
+                return true;
+            }
         }
         // 왼쪽
-        turnLeft();
-        nextPos = getNextPos();
-        if (isAvailableStrict(nextPos)) {
-            goFoward();
-            return true;
+        if (isAvailableStrict(leftPos)) {
+            // System.out.println("strict left");
+            turnLeft();
+            if (!distanceCheck()) {
+                // box pos 추가
+                if(!(blockSet.contains(leftPos))){
+                    blockSet.add(leftPos);
+                }
+                turnRight();
+            }
+            else{
+                goFoward();
+                return true;
+            }
         }
         // 오른쪽
-        turnRight();
-        turnRight();
-        nextPos = getNextPos();
-        if (isAvailableStrict(nextPos)) {
-            goFoward();
-            return true;
+        if (isAvailableStrict(rightPos)) {
+            // System.out.println("strict right");
+            turnRight();
+            if (!distanceCheck()) {
+                // box pos 추가
+                if(!(blockSet.contains(rightPos))){
+                    blockSet.add(rightPos);
+                }
+                turnLeft();
+            }
+            else{
+                goFoward();
+                return true;
+            }
         }
         // 뒤는 이미 간 곳이니까, strictCheck 통과 불가능
-        turnLeft();
         return false;
     }
 
     public static boolean looseCheck() {
         // looseCheck에 통과(갈 수 있는 칸이 존재)면 true
         // 정면
+        System.out.println("looseCheck!");
         Pair nextPos = getNextPos();
+        Pair leftPos = getLeftPos();
+        Pair rightPos = getRightPos();
         if (isAvailableLoose(nextPos)) {
-            goFoward();
-            return true;
+            if (!distanceCheck()) {
+                // box pos 추가
+                if(!blockSet.contains(nextPos)){
+                    blockSet.add(nextPos);
+                }
+            }
+            else{
+                goFoward();
+                return true;
+            }
         }
         if(curDir=='N' || curDir=='W'){
-            // 왼쪽
-            turnLeft();
-            nextPos = getNextPos();
-            if (isAvailableLoose(nextPos)) {
-                goFoward();
-                return true;
+            if(isAvailableLoose(leftPos)){
+                turnLeft();
+                if (!distanceCheck()) {
+                    // box pos 추가
+                    if(!(blockSet.contains(leftPos))){
+                        blockSet.add(leftPos);
+                    }
+                    turnRight();
+                }
+                else{
+                    goFoward();
+                    return true;
+                }
             }
-            // 오른쪽
-            turnRight();
-            turnRight();
-            nextPos = getNextPos();
-            if (isAvailableLoose(nextPos)) {
-                goFoward();
-                return true;
+            if(isAvailableLoose(rightPos)){
+                turnRight();
+                if (!distanceCheck()) {
+                    // box pos 추가
+                    if(!(blockSet.contains(rightPos))){
+                        blockSet.add(rightPos);
+                    }
+                    turnLeft();
+                }
+                else{
+                    goFoward();
+                    return true;
+                }
             }
-            // 뒤, 뒤까지 못 갈 수는 없다.
+            turnRight();
             turnRight();
             goFoward();
         }
         else{
-            // 오른쪽
+            if(isAvailableLoose(rightPos)){
+                turnRight();
+                if (!distanceCheck()) {
+                    // box pos 추가
+                    if(!(blockSet.contains(rightPos))){
+                        blockSet.add(rightPos);
+                    }
+                    turnLeft();
+                }
+                else{
+                    goFoward();
+                    return true;
+                }
+            }
+            if(isAvailableLoose(leftPos)){
+                turnLeft();
+                if (!distanceCheck()) {
+                    // box pos 추가
+                    if(!(blockSet.contains(leftPos))){
+                        blockSet.add(leftPos);
+                    }
+                    turnRight();
+                }
+                else{
+                    goFoward();
+                    return true;
+                }
+            }
             turnRight();
-            nextPos = getNextPos();
-            if (isAvailableLoose(nextPos)) {
-                goFoward();
-                return true;
-            }
-            // 왼쪽
-            turnLeft();
-            turnLeft();
-            nextPos = getNextPos();
-            if (isAvailableLoose(nextPos)) {
-                goFoward();
-                return true;
-            }
-            // 뒤, 뒤까지 못 갈 수는 없다.
-            turnLeft();
+            turnRight();
             goFoward();
         }
         return true;
@@ -352,11 +465,11 @@ public class App {
         boxes.add(initialPairs.get(1));
         redCells.add(initialPairs.get(2));
         redCells.add(initialPairs.get(3));
-        // boxes.add(new Pair(1,3));
-        // boxes.add(new Pair(2,3));
-        // redCells.add(new Pair(2,1));
-        // redCells.add(new Pair(1,2));
-        // System.out.printf("%d, %d, %c", curX, curY, curDir);
+        // boxes.add(new Pair(0,3));
+        // boxes.add(new Pair(5,0));
+        // redCells.add(new Pair(1,0));
+        // redCells.add(new Pair(4,1));
+        System.out.printf("%d, %d, %c", curX, curY, curDir);
         // 알고리즘 시작
 
         // System.out.println(unVisitedSet.contains(new Pair(0, 0)));
@@ -366,7 +479,11 @@ public class App {
             // for (int i = 0; i < unVisitedSet.size(); i++) {
             //     System.out.printf("(%d,%d)", unVisitedSet.get(i).x, unVisitedSet.get(i).y);
             // }
-            // System.out.printf("visitedCells # is %d\n", unVisitedSet.size());
+            // System.out.println("");
+            // for (int i = 0; i < visitedSet.size(); i++) {
+            //     System.out.printf("(%d,%d)", visitedSet.get(i).x, visitedSet.get(i).y);
+            // }
+            // System.out.println("");
             System.out.printf("boxes, redCells are %d, %d", blockSet.size(), redSet.size());
             System.out.println("");
 
@@ -377,6 +494,7 @@ public class App {
             }
 
             if (!strictCheck()) {
+                System.out.println("looseCheck!");
                 looseCheck();
             }
         }

@@ -16,18 +16,20 @@ import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3IRSensor;
 
 public class test_motor {
-    private static EV3IRSensor distance_sensor;
+   private static EV3IRSensor distance_sensor;
     private static EV3ColorSensor color_sensor;
     static RegulatedMotor leftMotor = Motor.A;
     static RegulatedMotor rightMotor = Motor.B;
     public static float maxsp = leftMotor.getMaxSpeed();
-    static int speed = (int) maxsp;
+    static int speed = 500;
     static int speed2 = 500;
-    static int delay = (int) (885000/maxsp);
-    static int turnDelay = (int) (429000/500);
-    static int turnDelayL = (int) (429000/500);
+    static int delay = (int) (915200/500);
+    static int delay2 = (int) (915200/500);
+    static int turnDelay = (int) (435350/500);
+    static int turnDelayL = (int) (435350/500);
     static EV3 ev3 = (EV3) BrickFinder.getLocal();
     static Keys keys = ev3.getKeys();
+    
     static class Pair {
         int x, y;
 
@@ -50,22 +52,67 @@ public class test_motor {
 
     static int curX = 0;
     static int curY = 0;
+    static int forwardCnt = 0;
+    static int turnCnt = 0;
     static char curDir = 'E';
     static ArrayList<Pair> unVisitedSet = new ArrayList<Pair>();
     static ArrayList<Pair> visitedSet = new ArrayList<Pair>();
     static ArrayList<Pair> redSet = new ArrayList<Pair>();// 아직 안만듦
     static ArrayList<Pair> blockSet = new ArrayList<Pair>();
+    static ArrayList<Pair> boxes = new ArrayList<Pair>();
+    static ArrayList<Pair> redCells = new ArrayList<Pair>();
+    static ArrayList<Pair> initialPairs = new ArrayList<Pair>();
 
+    public static ArrayList<Pair> pickRandoms() {
+        ArrayList<Pair> pairs = new ArrayList<Pair>();
+        int red1x = (int) (Math.random()*6);
+        int red1y = (int) (Math.random()*4);
+        int red2x = (int) (Math.random()*6);
+        int red2y = (int) (Math.random()*4);
+        int box1x = (int) (Math.random()*6);
+        int box1y = (int) (Math.random()*4);
+        int box2x = (int) (Math.random()*6);
+        int box2y = (int) (Math.random()*4); 
+//        System.out.printf("%d %d %d %d\n", red1x, red1y, red2x, red2y);
+        while (red1x == red2x && red2y == red1y){
+            red1y = (int) (Math.random()*6);
+            red2y = (int) (Math.random()*4);
+        }
+//        System.out.println("1");
+        while ((red1x == box1x && red1y == box1y) || (red2x == box1x && red2y == box1y) || (box1x == 0 && box1y == 0)){
+            box1x = (int) (Math.random()*6);
+            box1y = (int) (Math.random()*4); 
+        }
+//        System.out.println("2");
+
+        while ((red1x == box2x && red1y == box2y) || (red2x == box2x && red2y == box2y) || (box1x == box2x && box1y == box2y) || (box2x == 0 && box2y == 0)){
+            box2x = (int) (Math.random()*6);
+            box2y = (int) (Math.random()*4); 
+        }
+//        System.out.println("3");
+        
+//        System.out.printf("(%d,%d)\n", box1x, box1y);
+
+        Pair box1 = new Pair(box1x,box1y);
+        Pair box2 = new Pair(box2x,box2y);
+        Pair red1 = new Pair(red1x, red1y);
+        Pair red2 = new Pair(red2x, red2y);
+        pairs.add(box1);
+        pairs.add(box2);
+        pairs.add(red1);
+        pairs.add(red2);
+        
+        return pairs;
+    }
+    
     public static void goForward(RegulatedMotor x, RegulatedMotor y) {
-    	if(blockSet.size()==2 && redSet.size()==2){
-    		returnHome();
-    	}
-    	leftMotor.setSpeed(speed);
+       forwardCnt+=1;
+        leftMotor.setSpeed(speed);
         rightMotor.setSpeed(speed);
         int removeIndex = unVisitedSet.indexOf(new Pair(curX, curY));
-        if (removeIndex != -1){
-        	unVisitedSet.remove(removeIndex);
-        	visitedSet.add(new Pair(curX, curY));
+        if (removeIndex != -1) {
+            unVisitedSet.remove(removeIndex);
+            visitedSet.add(new Pair(curX, curY));
         }
         checkColor();
         // 방향에 따른 좌표 변화
@@ -104,111 +151,45 @@ public class test_motor {
         } else {
             // lcd.drawString("hello world", 1, 4);
         }
+//       Pair nowPos = new Pair(curX, curY);
+//        if (redCells.contains(nowPos)) {
+//            redSet.add(nowPos);
+//        }
     }
 
     public static void returnHome() {
-    	while (curX == 0 & curY == 0){
-            while (curDir != 'S'){
-                turnLeft(leftMotor, rightMotor);
+       initializePairs();
+        ArrayList<Pair> newVisited = new ArrayList<Pair>();
+        visitedSet= newVisited;
+
+        int restrictCnt = 0;
+        System.out.println("*********Return Home Start!!!*********");
+        while(curX!=0 || curY!=0){
+            if(restrictCnt >= 30){
+                System.out.printf("BREAK!!!!!!!!!!!!!!!!!!!\n");
+                System.out.printf("Boxes are at (%d, %d), (%d, %d)\n",
+        initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
+        );
+        System.out.printf("Reds are at (%d, %d), (%d, %d)\n",
+        initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
+        );
+        System.exit(1);
             }
-
-            while (curY > 0 & !distanceCheck()){
-                    goForward(leftMotor, rightMotor);
-                } //일단 밑으로 갈수있는데까지 내려감
-
-            turnLeft(leftMotor, rightMotor); //이제 다시 중 W보는중
-            if (curY !=0){ //0이 아니면 밑에 block 이 있단거
-
-                if (distanceCheck() | curX == 0){ //왼쪽으로 못감 이유 2가지
-                    turnLeft(leftMotor, rightMotor); 
-                    turnLeft(leftMotor, rightMotor);
-            
-                    if (distanceCheck()) { //만약 right 에 block 이 있다? -> 왼쪽은 boundary 오른쪽 block 밑 block
-                    	turnLeft(leftMotor, rightMotor);
-                    	goForward(leftMotor, rightMotor);
-                    	turnRight(leftMotor, rightMotor);
-                    	goForward(leftMotor, rightMotor);
-                    	goForward(leftMotor, rightMotor);
-                    	turnRight(leftMotor, rightMotor);
-                    }
-                    else if (curX == 5){ //왼쪽으로 못가는데 오른쪽은 또 boundary 라 못감. 즉 back 해야함
-                    	turnLeft(leftMotor, rightMotor);
-                    	goForward(leftMotor, rightMotor);
-                    	turnLeft(leftMotor, rightMotor);
-                    	goForward(leftMotor, rightMotor);
-                    	goForward(leftMotor, rightMotor);
-                    	turnLeft(leftMotor, rightMotor);
-                    }
-                    else{ // 오른쪽 뚫려있음 가고 다시 S보게 만듬
-                    	goForward(leftMotor, rightMotor);
-                    	if (curX != 4 & !distanceCheck())  {
-                    		goForward(leftMotor, rightMotor); //4가 아니면 두번갈 수 있음 block 나란히 두개 방지
-                    		turnRight(leftMotor, rightMotor);
-                    	}
-                    }
-                }
-        
-                else { //그냥 왼쪽이 뚫려있음 => 왼쪽으로감 + 다시 S보는중
-                	goForward(leftMotor, rightMotor);
-                	turnLeft(leftMotor, rightMotor);
-                }
-           }
-           else { //이건 curY가 0일때만 실행 0이 아니면 위에 while문 다시 실행해서 여기 도착
-                  //여기 실행된다는 것은 맨 밑줄에 있다는 것. 지금 W보고있음.
-                while(curX>0 & !distanceCheck()){
-                    goForward(leftMotor, rightMotor);
-                } //왼쪽으로 갈때까지 감
-
-                if (curX == 0) return;
-                    //complete return
-
-                 else{ //block 에 막힌거
-                    turnRight(leftMotor, rightMotor); 
-                    if (distanceCheck()){ //왼쪽 위 막혀있음 돌아서 나옴
-                        turnRight(leftMotor, rightMotor);
-                        goForward(leftMotor, rightMotor);
-                        turnLeft(leftMotor, rightMotor);
-                        goForward(leftMotor, rightMotor);
-                        goForward(leftMotor, rightMotor);
-                        turnLeft(leftMotor, rightMotor);
-                        goForward(leftMotor, rightMotor);
-                        goForward(leftMotor, rightMotor);
-                        turnLeft(leftMotor, rightMotor);
-                        continue;
-                    }
-                    goForward(leftMotor, rightMotor);
-                    turnLeft(leftMotor, rightMotor);
-                        if (distanceCheck()){ //2개 쌓여있음
-                            turnRight(leftMotor, rightMotor);
-                            goForward(leftMotor, rightMotor);
-                            turnLeft(leftMotor, rightMotor);
-                            goForward(leftMotor, rightMotor);
-                            goForward(leftMotor, rightMotor);
-                        }
-                        else{
-                            goForward(leftMotor, rightMotor); 
-                            if (distanceCheck()){ //한번 갔는데 block 이 또있음
-                                turnRight(leftMotor, rightMotor);
-                                goForward(leftMotor, rightMotor);
-                                turnLeft(leftMotor, rightMotor);
-                                goForward(leftMotor, rightMotor);
-                                goForward(leftMotor, rightMotor);
-                            }
-                            else{
-                            	goForward(leftMotor, rightMotor);
-                            }
-                        }
-                    }
+            System.out.printf("currentPos is %d, %d, currentDir is %c\n", curX, curY, curDir);
+            // looseCheck();
+            if(!strictCheck()){
+                looseCheck();
             }
-            }   
-//        leftMotor.stop(true);
-//        rightMotor.stop(true);
-//        Delay.msDelay(50000000);
+            restrictCnt+=1;
+        }
+        System.out.printf("%d , %d\n", curX, curY);
+        System.out.printf("total (move,turn) is (%d, %d)\n", forwardCnt, turnCnt);
+        double totalTime = forwardCnt*(2.5) + turnCnt*(3.5);
+        System.out.printf("total time is %f", totalTime);
+        System.exit(1);
     }
 
     public static void turnRight(RegulatedMotor x, RegulatedMotor y) {
-    	leftMotor.setSpeed(speed2);
-        rightMotor.setSpeed(speed2);
         switch (curDir) {
             case 'E':
                 curDir = 'S';
@@ -228,31 +209,32 @@ public class test_motor {
 
         y.backward();
         x.backward();
-        Delay.msDelay(250);
-        x.stop(true);
+        Delay.msDelay(500);
         y.stop(true);
-        Delay.msDelay(100);
+        x.stop(true);
+        Delay.msDelay(500);
         
         x.forward();
         y.backward();
-        Delay.msDelay(turnDelay);
+        Delay.msDelay(turnDelayL);
         x.stop(true);
         y.stop(true);
         Delay.msDelay(500);
-        
+
         x.forward();
         y.forward();
-        Delay.msDelay(400);
+        Delay.msDelay(500);
         x.stop(true);
         y.stop(true);
         Delay.msDelay(500);
+//        
+//      System.out.printf("%f\n", maxsp);
+//      Delay.msDelay(1000);
 
     }
 
     //it turns a little bit more, so need to change if needed.
     public static void turnLeft(RegulatedMotor x, RegulatedMotor y) {
-    	leftMotor.setSpeed(speed2);
-        rightMotor.setSpeed(speed2);
         switch (curDir) {
             case 'E':
                 curDir = 'N';
@@ -270,24 +252,27 @@ public class test_motor {
         
         y.backward();
         x.backward();
-        Delay.msDelay(250);
-        x.stop(true);
+        Delay.msDelay(500);
         y.stop(true);
-        Delay.msDelay(100);
+        x.stop(true);
+        Delay.msDelay(500);
                 
         y.forward();
         x.backward();
         Delay.msDelay(turnDelayL);
-        x.stop(true);
         y.stop(true);
+        x.stop(true);
         Delay.msDelay(500);
-//        
+        
         x.forward();
         y.forward();
-        Delay.msDelay(400);
+        Delay.msDelay(500);
         x.stop(true);
         y.stop(true);
         Delay.msDelay(500);
+        
+//        System.out.printf("%f", maxsp);
+//        Delay.msDelay(1000);
     }
 
     public static void initializePairs() {
@@ -313,6 +298,10 @@ public class test_motor {
         else{
             return true;
         }
+//        Pair nextPos = getNextPos();
+//         if (boxes.contains(nextPos))
+//             return false;
+//         return true;
     }
 
     public static Pair getNextPos() {
@@ -404,64 +393,83 @@ public class test_motor {
         // 정면
         Pair nextPos = getNextPos();
         if (isAvailableLoose(nextPos)) {
-            goForward(leftMotor, rightMotor);
+           goForward(leftMotor, rightMotor);
             return true;
         }
-        // 왼쪽
-        turnLeft(leftMotor, rightMotor);
-        nextPos = getNextPos();
-        if (isAvailableLoose(nextPos)) {
+        if(curDir=='N' || curDir=='W'){
+            // 왼쪽
+            turnLeft(leftMotor, rightMotor);
+            nextPos = getNextPos();
+            if (isAvailableLoose(nextPos)) {
+                goForward(leftMotor, rightMotor);
+                return true;
+            }
+            // 오른쪽
+            turnRight(leftMotor, rightMotor);
+            turnRight(leftMotor, rightMotor);
+            nextPos = getNextPos();
+            if (isAvailableLoose(nextPos)) {
+                goForward(leftMotor, rightMotor);
+                return true;
+            }
+            // 뒤, 뒤까지 못 갈 수는 없다.
+            turnRight(leftMotor, rightMotor);
             goForward(leftMotor, rightMotor);
-            return true;
         }
-        // 오른쪽
-        turnRight(leftMotor, rightMotor);
-        turnRight(leftMotor, rightMotor);
-        nextPos = getNextPos();
-        if (isAvailableLoose(nextPos)) {
+        else{
+            // 오른쪽
+            turnRight(leftMotor, rightMotor);
+            nextPos = getNextPos();
+            if (isAvailableLoose(nextPos)) {
+                goForward(leftMotor, rightMotor);
+                return true;
+            }
+            // 왼쪽
+            turnLeft(leftMotor, rightMotor);
+            turnLeft(leftMotor, rightMotor);
+            nextPos = getNextPos();
+            if (isAvailableLoose(nextPos)) {
+                goForward(leftMotor, rightMotor);
+                return true;
+            }
+            // 뒤, 뒤까지 못 갈 수는 없다.
+            turnLeft(leftMotor, rightMotor);
             goForward(leftMotor, rightMotor);
-            return true;
         }
-        // 뒤, 뒤까지 못 갈 수는 없다.
-        turnRight(leftMotor, rightMotor);
-        goForward(leftMotor, rightMotor);
-
         return true;
     }
 
     public static void main(String[] args) {
-    	
-    	distance_sensor = new EV3IRSensor(SensorPort.S1);
+       
+       distance_sensor = new EV3IRSensor(SensorPort.S1);
         color_sensor = new EV3ColorSensor(SensorPort.S4);
 
-
-
-        initializePairs();
-
-        // System.out.printf("%d, %d, %c", curX, curY, curDir);
-        // 알고리즘 시작
-
-//         System.out.println(unVisitedSet.contains(new Pair(0, 0)));
-        do {
-         while (!unVisitedSet.isEmpty()) {
-        
-         try {
-         Thread.sleep(200); // 1초 대기
-         } catch (InterruptedException e) {
-         e.printStackTrace();
-         }
-        
-         if (!strictCheck()) {
-        	 looseCheck();
-         }
-         }
-        }while(keys.getButtons()!=Keys.ID_ESCAPE);
-//         모든 칸을 다 가봄
-//        returnHome();
-                      
-//        goForward(leftMotor, rightMotor);
-//        turnLeft(leftMotor, rightMotor);
-//        turnRight(leftMotor, rightMotor);
+       initializePairs();
+       initialPairs = pickRandoms();
+       System.out.printf("Boxes are at (%d, %d), (%d, %d)",
+       initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
+       );
+       System.out.printf("Reds are at (%d, %d), (%d, %d)",
+       initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
+       );
+       boxes.add(initialPairs.get(0));
+       boxes.add(initialPairs.get(1));
+       redCells.add(initialPairs.get(2));
+       redCells.add(initialPairs.get(3));
+        while (!unVisitedSet.isEmpty() && !(redSet.size()>=2 && blockSet.size()>=2)) {
+       
+        try {
+        Thread.sleep(50); // 1초 대기
+        } catch (InterruptedException e) {
+        e.printStackTrace();
+        }
+       
+        if (!strictCheck()) {
+           looseCheck();
+        }
+        }
+       
+       returnHome();
         
     }
 }
