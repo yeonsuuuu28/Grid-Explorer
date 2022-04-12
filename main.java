@@ -64,43 +64,6 @@ public class test_motor {
     static ArrayList<Pair> boxes = new ArrayList<Pair>();
     static ArrayList<Pair> redCells = new ArrayList<Pair>();
     static ArrayList<Pair> initialPairs = new ArrayList<Pair>();
-
-    public static ArrayList<Pair> pickRandoms() {
-        ArrayList<Pair> pairs = new ArrayList<Pair>();
-        int red1x = (int) (Math.random()*6);
-        int red1y = (int) (Math.random()*4);
-        int red2x = (int) (Math.random()*6);
-        int red2y = (int) (Math.random()*4);
-        int box1x = (int) (Math.random()*6);
-        int box1y = (int) (Math.random()*4);
-        int box2x = (int) (Math.random()*6);
-        int box2y = (int) (Math.random()*4); 
-        while (red1x == red2x && red2y == red1y){
-            red1y = (int) (Math.random()*6);
-            red2y = (int) (Math.random()*4);
-        }
-        while ((red1x == box1x && red1y == box1y) || (red2x == box1x && red2y == box1y) || (box1x == 0 && box1y == 0)){
-            box1x = (int) (Math.random()*6);
-            box1y = (int) (Math.random()*4); 
-        }
-
-        while ((red1x == box2x && red1y == box2y) || (red2x == box2x && red2y == box2y) || (box1x == box2x && box1y == box2y) || (box2x == 0 && box2y == 0)){
-            box2x = (int) (Math.random()*6);
-            box2y = (int) (Math.random()*4); 
-        }
-        
-
-        Pair box1 = new Pair(box1x,box1y);
-        Pair box2 = new Pair(box2x,box2y);
-        Pair red1 = new Pair(red1x, red1y);
-        Pair red2 = new Pair(red2x, red2y);
-        pairs.add(box1);
-        pairs.add(box2);
-        pairs.add(red1);
-        pairs.add(red2);
-        
-        return pairs;
-    }
     
     public static void goForward(RegulatedMotor x, RegulatedMotor y) {
         TextLCD lcd = ev3.getTextLCD();
@@ -173,13 +136,7 @@ public class test_motor {
                 redSet.add(nowPos);
             }
             System.out.printf("(%d,%d,R)\n", curX, curY);
-        } else {
-            // lcd.drawString("hello world", 1, 4);
         }
-//       Pair nowPos = new Pair(curX, curY);
-//        if (redCells.contains(nowPos)) {
-//            redSet.add(nowPos);
-//        }
     }
 
     public static void returnHome() {
