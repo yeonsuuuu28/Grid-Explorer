@@ -64,49 +64,32 @@ public class test_motor {
     static ArrayList<Pair> boxes = new ArrayList<Pair>();
     static ArrayList<Pair> redCells = new ArrayList<Pair>();
     static ArrayList<Pair> initialPairs = new ArrayList<Pair>();
-
-    public static ArrayList<Pair> pickRandoms() {
-        ArrayList<Pair> pairs = new ArrayList<Pair>();
-        int red1x = (int) (Math.random()*6);
-        int red1y = (int) (Math.random()*4);
-        int red2x = (int) (Math.random()*6);
-        int red2y = (int) (Math.random()*4);
-        int box1x = (int) (Math.random()*6);
-        int box1y = (int) (Math.random()*4);
-        int box2x = (int) (Math.random()*6);
-        int box2y = (int) (Math.random()*4); 
-//        System.out.printf("%d %d %d %d\n", red1x, red1y, red2x, red2y);
-        while (red1x == red2x && red2y == red1y){
-            red1y = (int) (Math.random()*6);
-            red2y = (int) (Math.random()*4);
-        }
-//        System.out.println("1");
-        while ((red1x == box1x && red1y == box1y) || (red2x == box1x && red2y == box1y) || (box1x == 0 && box1y == 0)){
-            box1x = (int) (Math.random()*6);
-            box1y = (int) (Math.random()*4); 
-        }
-//        System.out.println("2");
-
-        while ((red1x == box2x && red1y == box2y) || (red2x == box2x && red2y == box2y) || (box1x == box2x && box1y == box2y) || (box2x == 0 && box2y == 0)){
-            box2x = (int) (Math.random()*6);
-            box2y = (int) (Math.random()*4); 
-        }
-//        System.out.println("3");
-        
-//        System.out.printf("(%d,%d)\n", box1x, box1y);
-
-        Pair box1 = new Pair(box1x,box1y);
-        Pair box2 = new Pair(box2x,box2y);
-        Pair red1 = new Pair(red1x, red1y);
-        Pair red2 = new Pair(red2x, red2y);
-        pairs.add(box1);
-        pairs.add(box2);
-        pairs.add(red1);
-        pairs.add(red2);
-        
-        return pairs;
-    }
     
+
+    public static boolean correctDir() {
+        int leftColor = color_sensor_left.getColorID();
+        int rightColor = color_sensor_right.getColorID();
+        while(leftColor == Color.BLACK || rightColor == Color.BLACK){
+            if(leftColor == Color.BLACK && rightColor == Color.BLACK){
+            	return true;
+            }
+            else if(leftColor == Color.BLACK){
+                rightMotor.setSpeed(30);
+                leftMotor.setSpeed(30);
+                rightMotor.backward();
+                Delay.msDelay(10);
+                rightColor = color_sensor_right.getColorID();
+            }
+            else{
+                leftMotor.setSpeed(30);
+                rightMotor.setSpeed(30);
+                leftMotor.backward();
+                Delay.msDelay(10);
+                leftColor = color_sensor_left.getColorID();
+            }
+        }
+        return false;
+    }
     public static void goForward(RegulatedMotor x, RegulatedMotor y) {
         TextLCD lcd = ev3.getTextLCD();
        forwardCnt+=1;
@@ -133,37 +116,21 @@ public class test_motor {
                 curY++;
                 break;
         }
-
+//        while(correctDir()!=true){
+//        	y.backward();
+//        	x.backward();
+//        	Delay.msDelay(50);
+//        }
+//        
+//        leftMotor.setSpeed(speed);
+//        rightMotor.setSpeed(speed);
+        
         y.backward();
         x.backward();
-        Delay.msDelay(delay);
-        x.stop(true);
-        y.stop(true);
-        Delay.msDelay(500);
-        alignCount = alignCount + 1;
-    
-        if (alignCount == 4) {
-            int leftColor = color_sensor_left.getColorID();
-            int rightColor = color_sensor_right.getColorID();
-        	while (leftColor != Color.BLACK) {
-        		leftMotor.setSpeed(10);
-                x.backward();
-                Delay.msDelay(10);
-                leftColor = color_sensor_left.getColorID();
-        	}
-            lcd.drawString("left black", 1, 4);
-            x.stop(true);
-        	while (rightColor != Color.BLACK) {
-        		rightMotor.setSpeed(10);
-                y.backward();
-                Delay.msDelay(10);
-                rightColor = color_sensor_right.getColorID();
-        	}
-            lcd.drawString("right black", 1, 4);
-            y.stop(true);
-            alignCount = 0;
-        }
-
+         Delay.msDelay(delay);
+         x.stop(true);
+         y.stop(true);
+         Delay.msDelay(300);
     } 
 
     public static void checkColor() {
@@ -173,47 +140,32 @@ public class test_motor {
         int id = color_sensor_left.getColorID();
         if (id == Color.RED) {
             // lcd.drawString("red", 1, 4);
-            redSet.add(new Pair(curX, curY));
-            System.out.printf("Red Color %d, %d", curX, curY);
-        } else {
-            // lcd.drawString("hello world", 1, 4);
+            Pair nowPos = new Pair(curX, curY);
+            if (redCells.contains(nowPos)) {
+                redSet.add(nowPos);
+            }
+            System.out.printf("(%d,%d,R)\n", curX, curY);
         }
-//       Pair nowPos = new Pair(curX, curY);
-//        if (redCells.contains(nowPos)) {
-//            redSet.add(nowPos);
-//        }
     }
 
     public static void returnHome() {
+    	System.out.printf("returnHome!");
        initializePairs();
         ArrayList<Pair> newVisited = new ArrayList<Pair>();
         visitedSet= newVisited;
 
         int restrictCnt = 0;
-        System.out.println("*********Return Home Start!!!*********");
         while(curX!=0 || curY!=0){
             if(restrictCnt >= 30){
-                System.out.printf("BREAK!!!!!!!!!!!!!!!!!!!\n");
-                System.out.printf("Boxes are at (%d, %d), (%d, %d)\n",
-        initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
-        );
-        System.out.printf("Reds are at (%d, %d), (%d, %d)\n",
-        initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
-        );
-        System.exit(1);
+                System.out.printf("return BREAK!!!!!!!!!!!!!!!!!!!\n");
+                System.exit(1);
             }
-            System.out.printf("currentPos is %d, %d, currentDir is %c\n", curX, curY, curDir);
-            // looseCheck();
             if(!strictCheck()){
                 looseCheck();
             }
             restrictCnt+=1;
         }
-        System.out.printf("%d , %d\n", curX, curY);
-        System.out.printf("total (move,turn) is (%d, %d)\n", forwardCnt, turnCnt);
-        double totalTime = forwardCnt*(2.5) + turnCnt*(3.5);
-        System.out.printf("total time is %f", totalTime);
-        System.exit(1);
+        return;
     }
 
     public static void turnRight(RegulatedMotor x, RegulatedMotor y) {
@@ -313,6 +265,9 @@ public class test_motor {
     }
 
     public static boolean distanceCheck() {
+    	leftMotor.stop();
+        rightMotor.stop();
+        Delay.msDelay(500);
         // 앞에 박스가 없으면 true, 있으면 false
         SampleProvider distanceMode = distance_sensor.getMode("Distance");
         float value[] = new float[distanceMode.sampleSize()];
@@ -325,10 +280,6 @@ public class test_motor {
         else{
             return true;
         }
-//        Pair nextPos = getNextPos();
-//         if (boxes.contains(nextPos))
-//             return false;
-//         return true;
     }
 
     public static Pair getNextPos() {
@@ -351,6 +302,47 @@ public class test_motor {
         Pair nextPos = new Pair(nextPosX, nextPosY);
         return nextPos;
     }
+    public static Pair getLeftPos() {
+        int leftPosX = curX;
+        int leftPosY = curY;
+        switch (curDir) {
+            case 'E':
+                leftPosY = curY + 1;
+                break;
+            case 'W':
+                leftPosY = curY - 1;
+                break;
+            case 'S':
+                leftPosX = curX + 1;
+                break;
+            case 'N':
+                leftPosX = curX - 1;
+                break;
+        }
+        Pair leftPos = new Pair(leftPosX, leftPosY);
+        return leftPos;
+    }
+    public static Pair getRightPos() {
+        int rightPosX = curX;
+        int rightPosY = curY;
+        switch (curDir) {
+            case 'E':
+                rightPosY = curY - 1;
+                break;
+            case 'W':
+                rightPosY = curY + 1;
+                break;
+            case 'S':
+                rightPosX = curX - 1;
+                break;
+            case 'N':
+                rightPosX = curX + 1;
+                break;
+        }
+        Pair rightPos = new Pair(rightPosX, rightPosY);
+        return rightPos;
+    }
+
 
     public static boolean isAvailableStrict(Pair nextPos) {
         if (nextPos.x > 5 || nextPos.x < 0) {
@@ -359,12 +351,7 @@ public class test_motor {
         if (nextPos.y > 3 || nextPos.y < 0) {
             return false;
         }
-        if (visitedSet.contains(new Pair(nextPos.x, nextPos.y))) {// 여기에 하자가 있음
-            return false;
-        }
-        if (!distanceCheck()) {
-            // box pos 추가
-            blockSet.add(nextPos);
+        if (visitedSet.contains(new Pair(nextPos.x, nextPos.y)) || blockSet.contains(new Pair(nextPos.x, nextPos.y))) {
             return false;
         }
 
@@ -378,9 +365,7 @@ public class test_motor {
         if (nextPos.y > 3 || nextPos.y < 0) {
             return false;
         }
-        if (!distanceCheck()) {
-            // box pos 추가
-            blockSet.add(nextPos);
+        if (blockSet.contains(new Pair(nextPos.x, nextPos.y))) {
             return false;
         }
 
@@ -391,27 +376,54 @@ public class test_motor {
         // strictCheck에 통과(갈 수 있는 칸이 존재)면 true
         // 정면
         Pair nextPos = getNextPos();
+        Pair leftPos = getLeftPos();
+        Pair rightPos = getRightPos();
         if (isAvailableStrict(nextPos)) {
-            goForward(leftMotor, rightMotor);
-            return true;
+            if (!distanceCheck()) {
+                // box pos 추가
+                if(!blockSet.contains(nextPos)){
+                    System.out.printf("(%d,%d,B)\n",nextPos.x,nextPos.y);
+                    blockSet.add(nextPos);
+                }
+            }
+            else{
+                goForward(leftMotor, rightMotor);
+                return true;
+            }
         }
         // 왼쪽
-        turnLeft(leftMotor, rightMotor);
-        nextPos = getNextPos();
-        if (isAvailableStrict(nextPos)) {
-            goForward(leftMotor, rightMotor);
-            return true;
+        if (isAvailableStrict(leftPos)) {
+            turnLeft(leftMotor, rightMotor);
+            if (!distanceCheck()) {
+                // box pos 추가
+                if(!(blockSet.contains(leftPos))){
+                    System.out.printf("(%d,%d,B)\n",leftPos.x,leftPos.y);
+                    blockSet.add(leftPos);
+                }
+                turnRight(leftMotor, rightMotor);
+            }
+            else{
+                goForward(leftMotor, rightMotor);
+                return true;
+            }
         }
         // 오른쪽
-        turnRight(leftMotor, rightMotor);
-        turnRight(leftMotor, rightMotor);
-        nextPos = getNextPos();
-        if (isAvailableStrict(nextPos)) {
-            goForward(leftMotor, rightMotor);
-            return true;
+        if (isAvailableStrict(rightPos)) {
+            // System.out.println("strict right");
+            turnRight(leftMotor, rightMotor);
+            if (!distanceCheck()) {
+                // box pos 추가
+                if(!(blockSet.contains(rightPos))){
+                    System.out.printf("(%d,%d,B)\n",rightPos.x,rightPos.y);
+                    blockSet.add(rightPos);
+                }
+                turnLeft(leftMotor, rightMotor);
+            }
+            else{
+                goForward(leftMotor, rightMotor);
+                return true;
+            }
         }
-        // 뒤는 이미 간 곳이니까, strictCheck 통과 불가능
-        turnLeft(leftMotor, rightMotor);
         return false;
     }
 
@@ -419,48 +431,90 @@ public class test_motor {
         // looseCheck에 통과(갈 수 있는 칸이 존재)면 true
         // 정면
         Pair nextPos = getNextPos();
+        Pair leftPos = getLeftPos();
+        Pair rightPos = getRightPos();
         if (isAvailableLoose(nextPos)) {
-           goForward(leftMotor, rightMotor);
-            return true;
+            if (!distanceCheck()) {
+                // box pos 추가
+                if(!blockSet.contains(nextPos)){
+                    System.out.printf("(%d,%d,B)\n",nextPos.x,nextPos.y);
+                    blockSet.add(nextPos);
+                }
+            }
+            else{
+                goForward(leftMotor, rightMotor);
+                return true;
+            }
         }
+
         if(curDir=='N' || curDir=='W'){
-            // 왼쪽
-            turnLeft(leftMotor, rightMotor);
-            nextPos = getNextPos();
-            if (isAvailableLoose(nextPos)) {
-                goForward(leftMotor, rightMotor);
-                return true;
+            if(isAvailableLoose(leftPos)){
+                turnLeft(leftMotor, rightMotor);
+                if (!distanceCheck()) {
+                    // box pos 추가
+                    if(!(blockSet.contains(leftPos))){
+                        System.out.printf("(%d,%d,B)\n",leftPos.x,leftPos.y);
+                        blockSet.add(leftPos);
+                    }
+                    turnRight(leftMotor, rightMotor);
+                }
+                else{
+                    goForward(leftMotor, rightMotor);
+                    return true;
+                }
             }
-            // 오른쪽
-            turnRight(leftMotor, rightMotor);
-            turnRight(leftMotor, rightMotor);
-            nextPos = getNextPos();
-            if (isAvailableLoose(nextPos)) {
-                goForward(leftMotor, rightMotor);
-                return true;
+            if(isAvailableLoose(rightPos)){
+                turnRight(leftMotor, rightMotor);
+                if (!distanceCheck()) {
+                    // box pos 추가
+                    if(!(blockSet.contains(rightPos))){
+                        System.out.printf("(%d,%d,B)\n",rightPos.x,rightPos.y);
+                        blockSet.add(rightPos);
+                    }
+                    turnLeft(leftMotor, rightMotor);
+                }
+                else{
+                    goForward(leftMotor, rightMotor);
+                    return true;
+                }
             }
-            // 뒤, 뒤까지 못 갈 수는 없다.
+            turnRight(leftMotor, rightMotor);
             turnRight(leftMotor, rightMotor);
             goForward(leftMotor, rightMotor);
         }
         else{
-            // 오른쪽
+            if(isAvailableLoose(rightPos)){
+                turnRight(leftMotor, rightMotor);
+                if (!distanceCheck()) {
+                    // box pos 추가
+                    if(!(blockSet.contains(rightPos))){
+                        System.out.printf("(%d,%d,B)\n",rightPos.x,rightPos.y);
+                        blockSet.add(rightPos);
+                    }
+                    turnLeft(leftMotor, rightMotor);
+                }
+                else{
+                    goForward(leftMotor, rightMotor);
+                    return true;
+                }
+            }
+            if(isAvailableLoose(leftPos)){
+                turnLeft(leftMotor, rightMotor);
+                if (!distanceCheck()) {
+                    // box pos 추가
+                    if(!(blockSet.contains(leftPos))){
+                        System.out.printf("(%d,%d,B)\n",leftPos.x,leftPos.y);
+                        blockSet.add(leftPos);
+                    }
+                    turnRight(leftMotor, rightMotor);
+                }
+                else{
+                    goForward(leftMotor, rightMotor);
+                    return true;
+                }
+            }
             turnRight(leftMotor, rightMotor);
-            nextPos = getNextPos();
-            if (isAvailableLoose(nextPos)) {
-                goForward(leftMotor, rightMotor);
-                return true;
-            }
-            // 왼쪽
-            turnLeft(leftMotor, rightMotor);
-            turnLeft(leftMotor, rightMotor);
-            nextPos = getNextPos();
-            if (isAvailableLoose(nextPos)) {
-                goForward(leftMotor, rightMotor);
-                return true;
-            }
-            // 뒤, 뒤까지 못 갈 수는 없다.
-            turnLeft(leftMotor, rightMotor);
+            turnRight(leftMotor, rightMotor);
             goForward(leftMotor, rightMotor);
         }
         return true;
@@ -472,36 +526,22 @@ public class test_motor {
        color_sensor_right = new EV3ColorSensor(SensorPort.S2);
        color_sensor_left = new EV3ColorSensor(SensorPort.S3);
 
-//        initializePairs();
-//        initialPairs = pickRandoms();
-//        System.out.printf("Boxes are at (%d, %d), (%d, %d)",
-//        initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
-//        );
-//        System.out.printf("Reds are at (%d, %d), (%d, %d)",
-//        initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
-//        );
-//        boxes.add(initialPairs.get(0));
-//        boxes.add(initialPairs.get(1));
-//        redCells.add(initialPairs.get(2));
-//        redCells.add(initialPairs.get(3));
-//         while (!unVisitedSet.isEmpty() && !(redSet.size()>=2 && blockSet.size()>=2)) {
-//        
-//         try {
-//         Thread.sleep(50); // 1초 대기
-//         } catch (InterruptedException e) {
-//         e.printStackTrace();
-//         }
-//        
-//         if (!strictCheck()) {
-//            looseCheck();
-//         }
-//         }
-//        
-//        returnHome();
-
-      goForward(leftMotor, rightMotor);
-      goForward(leftMotor, rightMotor);
-        
-        
+       initializePairs();
+         while (!unVisitedSet.isEmpty() && !(redSet.size()>=2 && blockSet.size()>=2)) {
+             try {
+                 Thread.sleep(50); // 1초 대기
+             } catch (InterruptedException e) {
+                 e.printStackTrace();
+             }
+             if (!strictCheck()) {
+                 looseCheck();
+             }
+         }
+         returnHome();
+//        goForward(leftMotor, rightMotor);
+//        goForward(leftMotor, rightMotor);
+//        goForward(leftMotor, rightMotor);
+//        goForward(leftMotor, rightMotor);
+//        goForward(leftMotor, rightMotor);
     }
 }
