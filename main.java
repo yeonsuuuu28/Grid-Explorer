@@ -65,6 +65,7 @@ public class test_motor {
     static ArrayList<Pair> redCells = new ArrayList<Pair>();
     static ArrayList<Pair> initialPairs = new ArrayList<Pair>();
     
+<<<<<<< HEAD
 
     public static boolean correctDir() {
         int leftColor = color_sensor_left.getColorID();
@@ -90,6 +91,8 @@ public class test_motor {
         }
         return false;
     }
+=======
+>>>>>>> a8eaa8384af7aa2ddddd42751e3e068ddce5336f
     public static void goForward(RegulatedMotor x, RegulatedMotor y) {
         TextLCD lcd = ev3.getTextLCD();
        forwardCnt+=1;
@@ -527,6 +530,7 @@ public class test_motor {
        color_sensor_left = new EV3ColorSensor(SensorPort.S3);
 
        initializePairs();
+<<<<<<< HEAD
          while (!unVisitedSet.isEmpty() && !(redSet.size()>=2 && blockSet.size()>=2)) {
              try {
                  Thread.sleep(50); // 1초 대기
@@ -543,5 +547,18 @@ public class test_motor {
 //        goForward(leftMotor, rightMotor);
 //        goForward(leftMotor, rightMotor);
 //        goForward(leftMotor, rightMotor);
+=======
+        while (!unVisitedSet.isEmpty() && !(redSet.size()>=2 && blockSet.size()>=2)) {
+            try {
+                Thread.sleep(50); // 1초 대기
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            if (!strictCheck()) {
+                looseCheck();
+            }
+        }
+        returnHome();
+>>>>>>> a8eaa8384af7aa2ddddd42751e3e068ddce5336f
     }
 }
