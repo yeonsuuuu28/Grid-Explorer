@@ -17,16 +17,18 @@ import lejos.hardware.sensor.EV3IRSensor;
 
 public class test_motor {
    private static EV3IRSensor distance_sensor;
-    private static EV3ColorSensor color_sensor;
-    static RegulatedMotor leftMotor = Motor.A;
-    static RegulatedMotor rightMotor = Motor.B;
+    static EV3ColorSensor color_sensor_left;
+    static EV3ColorSensor color_sensor_right;
+    static RegulatedMotor leftMotor = Motor.D;
+    static RegulatedMotor rightMotor = Motor.A;
     public static float maxsp = leftMotor.getMaxSpeed();
     static int speed = 500;
     static int speed2 = 500;
     static int delay = (int) (915200/500);
     static int delay2 = (int) (915200/500);
-    static int turnDelay = (int) (435350/500);
-    static int turnDelayL = (int) (435350/500);
+    static int turnDelay = (int) (435300/500);
+    static int turnDelayL = (int) (435300/500);
+    static int alignCount = 0;
     static EV3 ev3 = (EV3) BrickFinder.getLocal();
     static Keys keys = ev3.getKeys();
     
@@ -106,6 +108,7 @@ public class test_motor {
     }
     
     public static void goForward(RegulatedMotor x, RegulatedMotor y) {
+        TextLCD lcd = ev3.getTextLCD();
        forwardCnt+=1;
         leftMotor.setSpeed(speed);
         rightMotor.setSpeed(speed);
@@ -137,13 +140,37 @@ public class test_motor {
         x.stop(true);
         y.stop(true);
         Delay.msDelay(500);
-    }
+        alignCount = alignCount + 1;
+    
+        if (alignCount == 4) {
+            int leftColor = color_sensor_left.getColorID();
+            int rightColor = color_sensor_right.getColorID();
+        	while (leftColor != Color.BLACK) {
+        		leftMotor.setSpeed(10);
+                x.backward();
+                Delay.msDelay(10);
+                leftColor = color_sensor_left.getColorID();
+        	}
+            lcd.drawString("left black", 1, 4);
+            x.stop(true);
+        	while (rightColor != Color.BLACK) {
+        		rightMotor.setSpeed(10);
+                y.backward();
+                Delay.msDelay(10);
+                rightColor = color_sensor_right.getColorID();
+        	}
+            lcd.drawString("right black", 1, 4);
+            y.stop(true);
+            alignCount = 0;
+        }
+
+    } 
 
     public static void checkColor() {
         EV3 ev3 = (EV3) BrickFinder.getLocal();
         TextLCD lcd = ev3.getTextLCD();
         lcd.clear();
-        int id = color_sensor.getColorID();
+        int id = color_sensor_left.getColorID();
         if (id == Color.RED) {
             // lcd.drawString("red", 1, 4);
             redSet.add(new Pair(curX, curY));
@@ -442,34 +469,39 @@ public class test_motor {
     public static void main(String[] args) {
        
        distance_sensor = new EV3IRSensor(SensorPort.S1);
-        color_sensor = new EV3ColorSensor(SensorPort.S4);
+       color_sensor_right = new EV3ColorSensor(SensorPort.S2);
+       color_sensor_left = new EV3ColorSensor(SensorPort.S3);
 
-       initializePairs();
-       initialPairs = pickRandoms();
-       System.out.printf("Boxes are at (%d, %d), (%d, %d)",
-       initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
-       );
-       System.out.printf("Reds are at (%d, %d), (%d, %d)",
-       initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
-       );
-       boxes.add(initialPairs.get(0));
-       boxes.add(initialPairs.get(1));
-       redCells.add(initialPairs.get(2));
-       redCells.add(initialPairs.get(3));
-        while (!unVisitedSet.isEmpty() && !(redSet.size()>=2 && blockSet.size()>=2)) {
-       
-        try {
-        Thread.sleep(50); // 1초 대기
-        } catch (InterruptedException e) {
-        e.printStackTrace();
-        }
-       
-        if (!strictCheck()) {
-           looseCheck();
-        }
-        }
-       
-       returnHome();
+//        initializePairs();
+//        initialPairs = pickRandoms();
+//        System.out.printf("Boxes are at (%d, %d), (%d, %d)",
+//        initialPairs.get(0).x, initialPairs.get(0).y, initialPairs.get(1).x, initialPairs.get(1).y
+//        );
+//        System.out.printf("Reds are at (%d, %d), (%d, %d)",
+//        initialPairs.get(2).x, initialPairs.get(2).y, initialPairs.get(3).x, initialPairs.get(3).y
+//        );
+//        boxes.add(initialPairs.get(0));
+//        boxes.add(initialPairs.get(1));
+//        redCells.add(initialPairs.get(2));
+//        redCells.add(initialPairs.get(3));
+//         while (!unVisitedSet.isEmpty() && !(redSet.size()>=2 && blockSet.size()>=2)) {
+//        
+//         try {
+//         Thread.sleep(50); // 1초 대기
+//         } catch (InterruptedException e) {
+//         e.printStackTrace();
+//         }
+//        
+//         if (!strictCheck()) {
+//            looseCheck();
+//         }
+//         }
+//        
+//        returnHome();
+
+      goForward(leftMotor, rightMotor);
+      goForward(leftMotor, rightMotor);
+        
         
     }
 }
