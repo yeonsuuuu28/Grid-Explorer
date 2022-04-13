@@ -91,11 +91,13 @@ public class test_motor {
         	else if (rightTime > leftTime){
         		
         		leftMotor.stop();
+        		rightMotor.stop();
         		rightMotor.backward();
         		Delay.msDelay(rightTime - leftTime);
         	}
         	else {
         		rightMotor.stop();
+        		leftMotor.stop();
         		leftMotor.backward();
         		Delay.msDelay(leftTime - rightTime);
         	}
