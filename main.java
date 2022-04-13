@@ -25,12 +25,14 @@ public class test_motor {
     static RegulatedMotor leftMotor = Motor.D;
     static RegulatedMotor rightMotor = Motor.A;
     public static float maxsp = leftMotor.getMaxSpeed();
-    static int speed = 350;
-    static int speed2 = 350;
-    static int delay = (int) (915200/350);
-    static int delay2 = (int) (915200/350);
-    static int turnDelay = (int) (435300/350);
-    static int turnDelayL = (int) (435300/350);
+    static int speed = 600;
+    static int speed2 = 600;
+    static int delay = (int) (915200/600);
+    static int delay2 = (int) (915200/600);
+    static int turnDelay = (int) (450000/600);
+    static int turnDelayL = (int) (450000/600);
+//    static int turnDelay = (int) (435300/350);
+//    static int turnDelayL = (int) (435300/350);
     static int alignCount = 0;
     static EV3 ev3 = (EV3) BrickFinder.getLocal();
     static Keys keys = ev3.getKeys();
@@ -75,52 +77,47 @@ public class test_motor {
     static int rightColor;
     
     public static boolean correctDir() {
-    	System.out.println("**CURRDIR_START**");
-    	leftColor = color_sensor_left.getColorID();
-        rightColor = color_sensor_right.getColorID();
-        
-        while(leftSensed != true || rightSensed != true){
-        	leftColor = color_sensor_left.getColorID();
-            rightColor = color_sensor_right.getColorID();
-            if(rightColor == Color.BLACK){
-            	leftSensed = true;
-                leftTime = System.currentTimeMillis();
-            	break;
-            }
-            if(leftColor == Color.BLACK){
-            	rightSensed = true;
-                rightTime = System.currentTimeMillis();
-            	break;
-            }
-            
+
+        int leftColor = color_sensor_left.getColorID();
+        int rightColor = color_sensor_right.getColorID();
+        if (leftColor == Color.BLACK && rightColor == Color.BLACK){
+        	return true;
         }
-        if (leftSensed && rightSensed){
-           if (rightTime == leftTime){
-        	   leftSensed = false;
-               rightSensed = false;
-               return true;
-           }
-           else if (rightTime > leftTime){
-              leftSensed = false;
-               rightSensed = false;
-              leftMotor.stop();
-              rightMotor.stop();
-              rightMotor.backward();
-              Delay.msDelay(rightTime - leftTime);
-           }
-           else {
-              leftSensed = false;
-               rightSensed = false;
-              rightMotor.stop();
-              leftMotor.stop();
-              leftMotor.backward();
-              Delay.msDelay(leftTime - rightTime);
-           }
-           leftMotor.stop();
-           rightMotor.stop();
-           return true;
+        if (leftColor != Color.BLACK && rightColor == Color.BLACK){
+        	leftMotor.stop(true);
+        	Delay.msDelay(1);
+        	while (leftColor != Color.BLACK){
+        		rightMotor.setSpeed(50);
+        		rightMotor.backward();
+        		Delay.msDelay(1);
+        		leftColor = color_sensor_left.getColorID();
+        	}
+        	return true;
         }
-        return false;
+        if (leftColor == Color.BLACK && rightColor != Color.BLACK){
+        	rightMotor.stop(true);
+        	Delay.msDelay(1);
+        	while (rightColor != Color.BLACK){
+        		leftMotor.setSpeed(50);
+        		leftMotor.backward();
+        		Delay.msDelay(1);
+        		rightColor = color_sensor_right.getColorID();
+        	}
+        	return true;
+        }
+        else{
+        	while(leftColor != Color.BLACK && rightColor != Color.BLACK){
+        		rightMotor.setSpeed(50);
+        		leftMotor.setSpeed(50);
+        		leftMotor.backward();
+        		rightMotor.backward();
+        		Delay.msDelay(1);
+        		leftColor = color_sensor_left.getColorID();
+        		rightColor = color_sensor_right.getColorID();
+        	}
+        	correctDir();
+        	return true;
+        }
     }
     
     public static void goForward(RegulatedMotor x, RegulatedMotor y) {
@@ -130,7 +127,7 @@ public class test_motor {
             unVisitedSet.remove(removeIndex);
             visitedSet.add(new Pair(curX, curY));
         }
-        checkColor();
+        
         // 방향에 따른 좌표 변화
         switch (curDir) {
             case 'E':
@@ -156,24 +153,42 @@ public class test_motor {
         y.stop(true);
         Delay.msDelay(500);
         //이게 있어야 distance check able.
+        
+        correctDir();
+        
+        leftMotor.setSpeed(speed);
+        rightMotor.setSpeed(speed);
+        y.forward();
+        x.forward();
+        Delay.msDelay(200);
+        x.stop(true);
+        y.stop(true);
+        Delay.msDelay(50);
+        checkColor();
         try {
-            Thread.sleep(50); // 1초 대기
+            Thread.sleep(100); // 1초 대기
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     } 
 
     public static void checkColor() {
+    	try {
+            Thread.sleep(100); // 1초 대기
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         EV3 ev3 = (EV3) BrickFinder.getLocal();
         TextLCD lcd = ev3.getTextLCD();
         lcd.clear();
         int id = color_sensor_left.getColorID();
-        if (id == Color.RED) {
+        int id2 = color_sensor_right.getColorID();
+        if (id == Color.RED || id2 == Color.RED) {
             // lcd.drawString("red", 1, 4);
             Pair nowPos = new Pair(curX, curY);
             if (!redCells.contains(nowPos)) {
             	Sound.playNote(Sound. PIANO, 1047, 1000);
-                redSet.add(nowPos);
+                redCells.add(nowPos);
                 if(isAtZero){                	
                 	System.out.printf("(%d,%d,R)\n", curX, curY);
                 }
@@ -232,12 +247,20 @@ public class test_motor {
         // x.rotate(+1170);
         // y.rotate(-1170);
 
-        y.backward();
-        x.backward();
-        Delay.msDelay(500);
-        y.stop(true);
+//        y.backward();
+//        x.backward();
+//        Delay.msDelay(200);
+//        y.stop(true);
+//        x.stop(true);
+//        Delay.msDelay(500);
+        leftMotor.setSpeed(speed);
+        rightMotor.setSpeed(speed);
+        y.forward();
+        x.forward();
+        Delay.msDelay(250);
         x.stop(true);
-        Delay.msDelay(500);
+        y.stop(true);
+        Delay.msDelay(50);
         
         x.forward();
         y.backward();
@@ -248,12 +271,13 @@ public class test_motor {
 
         x.forward();
         y.forward();
-        Delay.msDelay(500);
+        Delay.msDelay(300);
         x.stop(true);
         y.stop(true);
         Delay.msDelay(500);
+        
         try {
-            Thread.sleep(50); // 1초 대기
+            Thread.sleep(100); // 1초 대기
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -279,13 +303,21 @@ public class test_motor {
                 break;
         }
         
-        y.backward();
-        x.backward();
-        Delay.msDelay(500);
-        y.stop(true);
+//        y.backward();
+//        x.backward();
+//        Delay.msDelay(200);
+//        y.stop(true);
+//        x.stop(true);
+//        Delay.msDelay(500);
+        leftMotor.setSpeed(speed);
+        rightMotor.setSpeed(speed);
+        y.forward();
+        x.forward();
+        Delay.msDelay(250);
         x.stop(true);
-        Delay.msDelay(500);
-                
+        y.stop(true);
+        Delay.msDelay(50);
+        
         y.forward();
         x.backward();
         Delay.msDelay(turnDelayL);
@@ -295,15 +327,17 @@ public class test_motor {
         
         x.forward();
         y.forward();
-        Delay.msDelay(500);
+        Delay.msDelay(300);
         x.stop(true);
         y.stop(true);
         Delay.msDelay(500);
+        
         try {
-            Thread.sleep(50); // 1초 대기
+            Thread.sleep(100); // 1초 대기
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        
     }
 
     public static void initializePairs() {
@@ -318,6 +352,11 @@ public class test_motor {
 
     public static boolean distanceCheck() {
         // 앞에 박스가 없으면 true, 있으면 false
+    	try {
+            Thread.sleep(100); // 1초 대기
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         SampleProvider distanceMode = distance_sensor.getMode("Distance");
         float value[] = new float[distanceMode.sampleSize()];
         distanceMode.fetchSample(value, 0);
@@ -490,7 +529,7 @@ public class test_motor {
         }
         return false;
     }
-
+    
     public static boolean looseCheck() {
         // looseCheck에 통과(갈 수 있는 칸이 존재)면 true
         // 정면
@@ -622,53 +661,68 @@ public class test_motor {
        distance_sensor = new EV3IRSensor(SensorPort.S1);
        color_sensor_right = new EV3ColorSensor(SensorPort.S2);
        color_sensor_left = new EV3ColorSensor(SensorPort.S3);
-        //inform initial positon 0,0 or 5,3
+//        //inform initial positon 0,0 or 5,3
        Sound.beep();
-    	do{
-    		if(keys.getButtons()==Keys.ID_LEFT){
-    			isAtZero = true;
-    			Sound.playNote(Sound.PIANO, 523, 1000);
-    			break;
-    		}
-    		else if(keys.getButtons()==Keys.ID_RIGHT){
-    			Sound.playNote(Sound. PIANO, 1047, 1000);
-    			isAtZero = false;
-    			break;
-    		}
-    		else{
-    			continue;
-    		}
-    	}while(true);
-    	if(isAtZero){
-    		System.out.println("Start at (0,0)");        	
-    	}
-    	else{
-    		System.out.println("Start at (5,3)");        	
-    	}
-    	try {
-    		Thread.sleep(1000); // 1초 대기
-    	} catch (InterruptedException e) {
-    		e.printStackTrace();
-    	}
-        initializePairs();
-	      while (!(redSet.size()>=2 && blockSet.size()>=2)) {
-	    	  if(keys.getButtons()==Keys.ID_ESCAPE){
-	    			break;
-	    		}
-	          try {
-	              Thread.sleep(50); // 1초 대기
-	          } catch (InterruptedException e) {
-	              e.printStackTrace();
-	          }
-	          if (!strictCheck()) {
-	              looseCheck();
-	          }
-	      }
-	      Sound.playNote(Sound.FLUTE, 1047, 1000);
-          returnHome();
-          Sound.twoBeeps();
-          leftMotor.stop();
-          rightMotor.stop();
-          Delay.msDelay(10000);
+//    	do{
+//    		if(keys.getButtons()==Keys.ID_LEFT){
+//    			isAtZero = true;
+//    			Sound.playNote(Sound.PIANO, 523, 1000);
+//    			break;
+//    		}
+//    		else if(keys.getButtons()==Keys.ID_RIGHT){
+//    			Sound.playNote(Sound. PIANO, 1047, 1000);
+//    			isAtZero = false;
+//    			break;
+//    		}
+//    		else{
+//    			continue;
+//    		}
+//    	}while(true);
+//    	if(isAtZero){
+//    		System.out.println("Start at (0,0)");        	
+//    	}
+//    	else{
+//    		System.out.println("Start at (5,3)");        	
+//    	}
+//    	try {
+//    		Thread.sleep(1000); // 1초 대기
+//    	} catch (InterruptedException e) {
+//    		e.printStackTrace();
+//    	}
+//        initializePairs();
+//	      while (!(redCells.size()>=2 && blockSet.size()>=2)) {
+//	    	  if(keys.getButtons()==Keys.ID_ESCAPE){
+//	    			break;
+//	    		}
+//	          try {
+//	              Thread.sleep(50); // 1초 대기
+//	          } catch (InterruptedException e) {
+//	              e.printStackTrace();
+//	          }
+//	          if (!strictCheck()) {
+//	              looseCheck();
+//	          }
+//	      }
+//	      Sound.playNote(Sound.FLUTE, 1047, 1000);
+//          returnHome();
+//          Sound.twoBeeps();
+//          do{
+//      		if(keys.getButtons()==Keys.ID_ENTER){
+//      			break;
+//      		}
+//      	}while(true);
+
+       
+          //skip case
+          //distance
+          //turn
+          //calibration
+    	goForward(leftMotor,rightMotor);
+    	turnLeft(leftMotor,rightMotor);
+    	goForward(leftMotor,rightMotor);
+    	turnLeft(leftMotor,rightMotor);
+    	goForward(leftMotor,rightMotor);
+    	turnLeft(leftMotor,rightMotor);
+    	goForward(leftMotor,rightMotor);
     }
 }
