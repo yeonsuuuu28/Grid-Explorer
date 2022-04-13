@@ -16,6 +16,7 @@ import lejos.hardware.motor.Motor;
 import lejos.hardware.port.SensorPort;
 import lejos.hardware.sensor.EV3ColorSensor;
 import lejos.hardware.sensor.EV3IRSensor;
+import lejos.hardware.Sound;
 
 public class test_motor {
    private static EV3IRSensor distance_sensor;
@@ -33,6 +34,7 @@ public class test_motor {
     static int alignCount = 0;
     static EV3 ev3 = (EV3) BrickFinder.getLocal();
     static Keys keys = ev3.getKeys();
+    static boolean isAtZero;
     
     static class Pair {
         int x, y;
@@ -94,13 +96,11 @@ public class test_motor {
         }
         if (leftSensed && rightSensed){
            if (rightTime == leftTime){
-        	   System.out.println("same time");
         	   leftSensed = false;
                rightSensed = false;
                return true;
            }
            else if (rightTime > leftTime){
-        	   System.out.println("right > left");
               leftSensed = false;
                rightSensed = false;
               leftMotor.stop();
@@ -109,7 +109,6 @@ public class test_motor {
               Delay.msDelay(rightTime - leftTime);
            }
            else {
-        	   System.out.println("left > right");
               leftSensed = false;
                rightSensed = false;
               rightMotor.stop();
@@ -173,8 +172,14 @@ public class test_motor {
             // lcd.drawString("red", 1, 4);
             Pair nowPos = new Pair(curX, curY);
             if (!redCells.contains(nowPos)) {
+            	Sound.playNote(Sound. PIANO, 1047, 1000);
                 redSet.add(nowPos);
-                System.out.printf("(%d,%d,R)\n", curX, curY);
+                if(isAtZero){                	
+                	System.out.printf("(%d,%d,R)\n", curX, curY);
+                }
+                else{
+                	System.out.printf("(%d,%d,R)\n", 5-curX, 3-curY);
+                }
             }
             
         }
@@ -182,6 +187,9 @@ public class test_motor {
 
     public static void returnHome() {
        System.out.printf("returnHome!");
+       if(keys.getButtons()==Keys.ID_ESCAPE){
+			return;
+		}
        initializePairs();
         ArrayList<Pair> newVisited = new ArrayList<Pair>();
         visitedSet= newVisited;
@@ -189,7 +197,7 @@ public class test_motor {
         int restrictCnt = 0;
         while(curX!=0 || curY!=0){
            if(keys.getButtons() == Keys.ID_ESCAPE){
-              System.exit(1);
+              return;
            }
             if(restrictCnt >= 30){
                 System.out.printf("return BREAK!!!!!!!!!!!!!!!!!!!\n");
@@ -315,6 +323,7 @@ public class test_motor {
         distanceMode.fetchSample(value, 0);
         float centimeter = value[0];
         if(centimeter < 53.0){
+        	Sound.playNote(Sound.PIANO, 523, 1000);
             return false;
         }
         else{
@@ -422,7 +431,12 @@ public class test_motor {
             if (!distanceCheck()) {
                 // box pos 추가
                 if(!blockSet.contains(nextPos)){
-                    System.out.printf("(%d,%d,B)\n",nextPos.x,nextPos.y);
+                	if(isAtZero){                	
+                    	System.out.printf("(%d,%d,B)\n", nextPos.x, nextPos.y);
+                    }
+                    else{
+                    	System.out.printf("(%d,%d,B)\n", 5-nextPos.x, 3-nextPos.y);
+                    }
                     blockSet.add(nextPos);
                 }
             }
@@ -437,7 +451,12 @@ public class test_motor {
             if (!distanceCheck()) {
                 // box pos 추가
                 if(!(blockSet.contains(leftPos))){
-                    System.out.printf("(%d,%d,B)\n",leftPos.x,leftPos.y);
+                	if(isAtZero){                	
+                    	System.out.printf("(%d,%d,B)\n", leftPos.x, leftPos.y);
+                    }
+                    else{
+                    	System.out.printf("(%d,%d,B)\n", 5-leftPos.x, 3-leftPos.y);
+                    }
                     blockSet.add(leftPos);
                 }
                 turnRight(leftMotor, rightMotor);
@@ -454,7 +473,12 @@ public class test_motor {
             if (!distanceCheck()) {
                 // box pos 추가
                 if(!(blockSet.contains(rightPos))){
-                    System.out.printf("(%d,%d,B)\n",rightPos.x,rightPos.y);
+                	if(isAtZero){                	
+                    	System.out.printf("(%d,%d,B)\n", rightPos.x, rightPos.y);
+                    }
+                    else{
+                    	System.out.printf("(%d,%d,B)\n", 5-rightPos.x, 3-rightPos.y);
+                    }
                     blockSet.add(rightPos);
                 }
                 turnLeft(leftMotor, rightMotor);
@@ -477,7 +501,12 @@ public class test_motor {
             if (!distanceCheck()) {
                 // box pos 추가
                 if(!blockSet.contains(nextPos)){
-                    System.out.printf("(%d,%d,B)\n",nextPos.x,nextPos.y);
+                	if(isAtZero){                	
+                    	System.out.printf("(%d,%d,B)\n", nextPos.x, nextPos.y);
+                    }
+                    else{
+                    	System.out.printf("(%d,%d,B)\n", 5-nextPos.x, 3-nextPos.y);
+                    }
                     blockSet.add(nextPos);
                 }
             }
@@ -493,7 +522,12 @@ public class test_motor {
                 if (!distanceCheck()) {
                     // box pos 추가
                     if(!(blockSet.contains(leftPos))){
-                        System.out.printf("(%d,%d,B)\n",leftPos.x,leftPos.y);
+                    	if(isAtZero){                	
+                        	System.out.printf("(%d,%d,B)\n", leftPos.x, leftPos.y);
+                        }
+                        else{
+                        	System.out.printf("(%d,%d,B)\n", 5-leftPos.x, 3-leftPos.y);
+                        };
                         blockSet.add(leftPos);
                     }
                     turnRight(leftMotor, rightMotor);
@@ -508,7 +542,12 @@ public class test_motor {
                 if (!distanceCheck()) {
                     // box pos 추가
                     if(!(blockSet.contains(rightPos))){
-                        System.out.printf("(%d,%d,B)\n",rightPos.x,rightPos.y);
+                    	if(isAtZero){                	
+                        	System.out.printf("(%d,%d,B)\n", rightPos.x, rightPos.y);
+                        }
+                        else{
+                        	System.out.printf("(%d,%d,B)\n", 5-rightPos.x, 3-rightPos.y);
+                        }
                         blockSet.add(rightPos);
                     }
                     turnLeft(leftMotor, rightMotor);
@@ -528,7 +567,12 @@ public class test_motor {
                 if (!distanceCheck()) {
                     // box pos 추가
                     if(!(blockSet.contains(rightPos))){
-                        System.out.printf("(%d,%d,B)\n",rightPos.x,rightPos.y);
+                    	if(isAtZero){                	
+                        	System.out.printf("(%d,%d,B)\n", rightPos.x, rightPos.y);
+                        }
+                        else{
+                        	System.out.printf("(%d,%d,B)\n", 5-rightPos.x, 3-rightPos.y);
+                        }
                         blockSet.add(rightPos);
                     }
                     turnLeft(leftMotor, rightMotor);
@@ -543,7 +587,12 @@ public class test_motor {
                 if (!distanceCheck()) {
                     // box pos 추가
                     if(!(blockSet.contains(leftPos))){
-                        System.out.printf("(%d,%d,B)\n",leftPos.x,leftPos.y);
+                    	if(isAtZero){                	
+                        	System.out.printf("(%d,%d,B)\n", leftPos.x, leftPos.y);
+                        }
+                        else{
+                        	System.out.printf("(%d,%d,B)\n", 5-leftPos.x, 3-leftPos.y);
+                        };
                         blockSet.add(leftPos);
                     }
                     turnRight(leftMotor, rightMotor);
@@ -560,41 +609,66 @@ public class test_motor {
         return true;
     }
 
+    
+    /*
+     * 시작할때 beep
+     *  시작할 떄 좌표 0,0이면 left, 3,5면 right누름 (낮은피아노, 높은피아노)
+     *  돌기 시작할 때 red만나면 높은 피아노, box만나면 낮은 피아노
+     *  returnHome시작할 때 플룻소리
+     *  다 끝나면 doubleBeep소리
+     * */
     public static void main(String[] args) {
        
        distance_sensor = new EV3IRSensor(SensorPort.S1);
        color_sensor_right = new EV3ColorSensor(SensorPort.S2);
        color_sensor_left = new EV3ColorSensor(SensorPort.S3);
-
-       initializePairs();
-         while (!(redSet.size()>=2 && blockSet.size()>=2)) {
-             try {
-                 Thread.sleep(50); // 1초 대기
-             } catch (InterruptedException e) {
-                 e.printStackTrace();
-             }
-             if (!strictCheck()) {
-                 looseCheck();
-             }
-         }
-         returnHome();
-         leftMotor.stop();
-         rightMotor.stop();
-         Delay.msDelay(10000);
-//         for(int i=0 ; i<3 ; i++){
-//        	 if (!strictCheck()) {
-//        		 looseCheck();
-//        	 }
-//         }
-         
-//        goForward(leftMotor, rightMotor);
-//        goForward(leftMotor, rightMotor);
-//        goForward(leftMotor, rightMotor);
-//        turnRight(leftMotor, rightMotor);
-//        goForward(leftMotor, rightMotor);
-//        goForward(leftMotor, rightMotor);
-//        goForward(leftMotor, rightMotor);
-//        goForward(leftMotor, rightMotor);
-//        goForward(leftMotor, rightMotor);
+        //inform initial positon 0,0 or 5,3
+       Sound.beep();
+    	do{
+    		if(keys.getButtons()==Keys.ID_LEFT){
+    			isAtZero = true;
+    			Sound.playNote(Sound.PIANO, 523, 1000);
+    			break;
+    		}
+    		else if(keys.getButtons()==Keys.ID_RIGHT){
+    			Sound.playNote(Sound. PIANO, 1047, 1000);
+    			isAtZero = false;
+    			break;
+    		}
+    		else{
+    			continue;
+    		}
+    	}while(true);
+    	if(isAtZero){
+    		System.out.println("Start at (0,0)");        	
+    	}
+    	else{
+    		System.out.println("Start at (5,3)");        	
+    	}
+    	try {
+    		Thread.sleep(1000); // 1초 대기
+    	} catch (InterruptedException e) {
+    		e.printStackTrace();
+    	}
+        initializePairs();
+	      while (!(redSet.size()>=2 && blockSet.size()>=2)) {
+	    	  if(keys.getButtons()==Keys.ID_ESCAPE){
+	    			break;
+	    		}
+	          try {
+	              Thread.sleep(50); // 1초 대기
+	          } catch (InterruptedException e) {
+	              e.printStackTrace();
+	          }
+	          if (!strictCheck()) {
+	              looseCheck();
+	          }
+	      }
+	      Sound.playNote(Sound.FLUTE, 1047, 1000);
+          returnHome();
+          Sound.twoBeeps();
+          leftMotor.stop();
+          rightMotor.stop();
+          Delay.msDelay(10000);
     }
 }
