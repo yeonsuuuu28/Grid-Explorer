@@ -29,14 +29,8 @@ public class test_motor {
     static int speed = 600;
     static int speed2 = 600;
     static int delay = (int) (915200/600);
-    static int delay2 = (int) (915200/600);
     static int turnDelay = (int) (440000/600);
     static int turnDelayL = (int) (475000/600);
-//    static int turnDelay = (int) (420000/600);
-//    static int turnDelayL = (int) (480000/600);  20220414 기준
-//    static int turnDelay = (int) (435300/350);
-//    static int turnDelayL = (int) (435300/350);
-    static int alignCount = 0;
     static EV3 ev3 = (EV3) BrickFinder.getLocal();
     static Keys keys = ev3.getKeys();
     static boolean isAtZero;
@@ -72,7 +66,7 @@ public class test_motor {
     static boolean rightSensed = false;
     static ArrayList<Pair> unVisitedSet = new ArrayList<Pair>();
     static ArrayList<Pair> visitedSet = new ArrayList<Pair>();
-    static ArrayList<Pair> redSet = new ArrayList<Pair>();// 아직 안만듦
+    static ArrayList<Pair> redSet = new ArrayList<Pair>();
     static ArrayList<Pair> blockSet = new ArrayList<Pair>();
     static ArrayList<Pair> boxes = new ArrayList<Pair>();
     static ArrayList<Pair> redCells = new ArrayList<Pair>();
@@ -206,18 +200,7 @@ public class test_motor {
         x.stop(true);
         y.stop(true);
         Delay.msDelay(200);
-        //이게 있어야 distance check able.
-        
-        
-        
-//        leftMotor.setSpeed(speed);
-//        rightMotor.setSpeed(speed);
-//        y.forward();
-//        x.forward();
-//        Delay.msDelay(200);
-//        x.stop(true);
-//        y.stop(true);
-//        Delay.msDelay(50);
+        //이게 있어야 distance 가능
         checkColor();
         try {
             Thread.sleep(100); // 1초 대기
@@ -238,7 +221,6 @@ public class test_motor {
         int id = color_sensor_left.getColorID();
         int id2 = color_sensor_right.getColorID();
         if (id == Color.RED || id2 == Color.RED) {
-            // lcd.drawString("red", 1, 4);
             Pair nowPos = new Pair(curX, curY);
             if (!redCells.contains(nowPos)) {
                Sound.playNote(Sound. PIANO, 1047, 1000);
@@ -297,15 +279,7 @@ public class test_motor {
                 curDir = 'E';
                 break;
         }
-        // x.rotate(+1170);
-        // y.rotate(-1170);
 
-//        y.backward();
-//        x.backward();
-//        Delay.msDelay(200);
-//        y.stop(true);
-//        x.stop(true);
-//        Delay.msDelay(500);
         leftMotor.setSpeed(speed);
         rightMotor.setSpeed(speed);
         y.backward();
@@ -336,8 +310,7 @@ public class test_motor {
         }
     }
 
-    //it turns a little bit more, so need to change if needed.
-    public static void (RegulatedMotor x, RegulatedMotor y) {
+    public static void turnLeft (RegulatedMotor x, RegulatedMotor y) {
        if(keys.getButtons() == Keys.ID_ESCAPE){
           System.exit(1);
        }
@@ -356,12 +329,6 @@ public class test_motor {
                 break;
         }
         
-//        y.backward();
-//        x.backward();
-//        Delay.msDelay(200);
-//        y.stop(true);
-//        x.stop(true);
-//        Delay.msDelay(500);
         leftMotor.setSpeed(speed);
         rightMotor.setSpeed(speed);
         y.backward();
@@ -534,10 +501,6 @@ public class test_motor {
                        System.out.printf("(%d,%d,B)\n", 5-nextPos.x, 3-nextPos.y);
                     }
                     blockSet.add(nextPos);
-                    int removeIndex = unVisitedSet.indexOf(new Pair(nextPos.x, nextPos.y));
-                    if (removeIndex != -1) {
-                        unVisitedSet.remove(removeIndex);
-                    }
                 }
             }
             else{
@@ -558,10 +521,6 @@ public class test_motor {
                        System.out.printf("(%d,%d,B)\n", 5-leftPos.x, 3-leftPos.y);
                     }
                     blockSet.add(leftPos);
-                    int removeIndex = unVisitedSet.indexOf(new Pair(leftPos.x, leftPos.y));
-                    if (removeIndex != -1) {
-                        unVisitedSet.remove(removeIndex);
-                    }
                 }
                 turnRight(leftMotor, rightMotor);
             }
@@ -584,10 +543,6 @@ public class test_motor {
                        System.out.printf("(%d,%d,B)\n", 5-rightPos.x, 3-rightPos.y);
                     }
                     blockSet.add(rightPos);
-                    int removeIndex = unVisitedSet.indexOf(new Pair(rightPos.x, rightPos.y));
-                    if (removeIndex != -1) {
-                        unVisitedSet.remove(removeIndex);
-                    }
                 }
                 turnLeft(leftMotor, rightMotor);
             }
@@ -616,10 +571,6 @@ public class test_motor {
                        System.out.printf("(%d,%d,B)\n", 5-nextPos.x, 3-nextPos.y);
                     }
                     blockSet.add(nextPos);
-                    int removeIndex = unVisitedSet.indexOf(new Pair(nextPos.x, nextPos.y));
-                    if (removeIndex != -1) {
-                        unVisitedSet.remove(removeIndex);
-                    }
                 }
             }
             else{
@@ -641,10 +592,6 @@ public class test_motor {
                            System.out.printf("(%d,%d,B)\n", 5-leftPos.x, 3-leftPos.y);
                         };
                         blockSet.add(leftPos);
-                        int removeIndex = unVisitedSet.indexOf(new Pair(leftPos.x, leftPos.y));
-                    if (removeIndex != -1) {
-                        unVisitedSet.remove(removeIndex);
-                    }
                     }
                     turnRight(leftMotor, rightMotor);
                 }
@@ -665,10 +612,6 @@ public class test_motor {
                            System.out.printf("(%d,%d,B)\n", 5-rightPos.x, 3-rightPos.y);
                         }
                         blockSet.add(rightPos);
-                        int removeIndex = unVisitedSet.indexOf(new Pair(rightPos.x, rightPos.y));
-                    if (removeIndex != -1) {
-                        unVisitedSet.remove(removeIndex);
-                    }
                     }
                     turnLeft(leftMotor, rightMotor);
                 }
@@ -694,10 +637,6 @@ public class test_motor {
                            System.out.printf("(%d,%d,B)\n", 5-rightPos.x, 3-rightPos.y);
                         }
                         blockSet.add(rightPos);
-                        int removeIndex = unVisitedSet.indexOf(new Pair(rightPos.x, rightPos.y));
-                    if (removeIndex != -1) {
-                        unVisitedSet.remove(removeIndex);
-                    }
                     }
                     turnLeft(leftMotor, rightMotor);
                 }
@@ -718,10 +657,6 @@ public class test_motor {
                            System.out.printf("(%d,%d,B)\n", 5-leftPos.x, 3-leftPos.y);
                         };
                         blockSet.add(leftPos);
-                        int removeIndex = unVisitedSet.indexOf(new Pair(leftPos.x, leftPos.y));
-                    if (removeIndex != -1) {
-                        unVisitedSet.remove(removeIndex);
-                    }
                     }
                     turnRight(leftMotor, rightMotor);
                 }
@@ -808,28 +743,13 @@ public class test_motor {
                 if (redCells.size() < 2 ){
                    if (redCells.size() == 1){
                    Pair temp = unVisitedSet.get((int)(Math.random()*unVisitedSet.size()));
-                   if(isAtZero){
-                       System.out.printf("(%d,%d,R)\n", temp.x, temp.y);
-                   }
-                   else{
-                       System.out.printf("(%d,%d,R)\n", 5-temp.x, 3-temp.y);
-                   }
+                   System.out.printf("(%d,%d,R)\n", temp.x, temp.y);
                    }
                    else{
                        Pair temp = unVisitedSet.get((int)(Math.random()*unVisitedSet.size()));
-                        if(isAtZero){
-                            System.out.printf("(%d,%d,R)\n", temp.x, temp.y);
-                        }
-                        else{
-                            System.out.printf("(%d,%d,R)\n", 5-temp.x, 3-temp.y);
-                        }
+                       System.out.printf("(%d,%d,R)\n", temp.x, temp.y);
                        Pair temp2 = unVisitedSet.get((int)(Math.random()*unVisitedSet.size()));
-                       if(isAtZero){
-                            System.out.printf("(%d,%d,R)\n", temp2.x, temp2.y);
-                        }
-                        else{
-                            System.out.printf("(%d,%d,R)\n", 5-temp2.x, 3-temp2.y);
-                        }
+                       System.out.printf("(%d,%d,R)\n", temp2.x, temp2.y);
                    }
                 }
                 is250 = true;
@@ -857,20 +777,5 @@ public class test_motor {
                break;
             }
          }while(true);
-
-       
-          //skip case
-          //distance
-          //turn
-          //calibration
-//       distanceCheck();
-//       goForward(leftMotor,rightMotor);
-//        turnLeft(leftMotor,rightMotor);
-//       goForward(leftMotor,rightMotor);
-//       turnLeft(leftMotor,rightMotor);
-//       goForward(leftMotor,rightMotor);
-//       turnLeft(leftMotor,rightMotor);
-//       goForward(leftMotor,rightMotor);
-//       turnLeft(leftMotor,rightMotor);
     }
 }
